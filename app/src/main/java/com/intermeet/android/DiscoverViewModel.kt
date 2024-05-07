@@ -122,13 +122,43 @@ class DiscoverViewModel : ViewModel() {
                 userMeetsPreferences(it.value, currentUser)
             }.toList().sortedByDescending {
                 commonInterestsCount(it.second.interests, currentUser.interests)
-            }.map { it.first }
+
+            }.map { it.first }.toMutableList()
+
+            fetchLikedUsers(getCurrentUser()!!) { filteredUsers ->
+
+                val iterator = filteredAndSortedIds.iterator()
+                while (iterator.hasNext())
+                {
+                    val id = iterator.next()
+                    if (filteredUsers.contains(id))
+                    {
+                        iterator.remove() // Safely remove the element using the iterator
+                    }
+                }
+                //filteredUserIdsLiveData.postValue(filteredAndSortedIds)
+            }
+
+            fetchMapUsers(getCurrentUser()!!){filteredMatches ->
+
+                val iterator = filteredAndSortedIds.iterator()
+                while(iterator.hasNext())
+                {
+                    val id = iterator.next()
+                    if(filteredMatches.contains(id))
+                    {
+                        iterator.remove()
+                    }
+                }
+                filteredUserIdsLiveData.postValue(filteredAndSortedIds)
+            }
+
+            /*}.map { it.first }
 
             // Fetch full user details for the filtered and sorted IDs and update LiveData
             val filteredUsers = fetchUsersData(filteredAndSortedIds)
             _filteredUsers.postValue(filteredUsers) // Post the detailed data to LiveData
-            filteredUserIdsLiveData.postValue(filteredAndSortedIds) // Post filtered IDs for any other use
-
+            filteredUserIdsLiveData.postValue(filteredAndSortedIds) // Post filtered IDs for any other use*/
         }
     }
 
@@ -152,6 +182,20 @@ class DiscoverViewModel : ViewModel() {
             }
         })
     }
+    private fun fetchMapUsers(userID: String, callback: (List<String>) -> Unit) {
+        val userRef = FirebaseDatabase.getInstance().getReference("users").child(userID).child("matches")
+        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val likedUserIds = snapshot.children.mapNotNull { it.value.toString() }
+                callback(likedUserIds)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("ChatFragment", "Error fetching liked user IDs: ${error.message}")
+            }
+        })
+    }
+
     private suspend fun fetchCurrentUserPreferences(): UserDataModel {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return UserDataModel()
         val prefRef = FirebaseDatabase.getInstance().getReference("users/$userId")
