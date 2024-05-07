@@ -147,7 +147,7 @@
         android:layout_width="245dp"
         android:layout_height="61dp"
         android:layout_marginStart="74dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="19dp"
         android:fontFamily="@font/outfitregular"
         android:gravity="center"
         android:text="@string/TOSyPP"

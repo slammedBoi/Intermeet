@@ -14,7 +14,7 @@
 
     <item
         android:id="@+id/navigation_discover"
-        android:icon="@drawable/ic_cards"
+        android:icon="@drawable/ic_discover"
         android:title="@string/discover" />
 
     <item

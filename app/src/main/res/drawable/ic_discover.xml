@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- When item is selected, use gradient icon -->
+    <item android:drawable="@drawable/gradientlogo2" android:state_checked="true"/>
+    <!-- Default icon (unselected state) -->
+    <item android:drawable="@drawable/default2"/>
+</selector>
