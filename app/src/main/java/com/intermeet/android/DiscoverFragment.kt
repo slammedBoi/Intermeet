@@ -77,6 +77,7 @@ class DiscoverFragment : Fragment() {
             returnButton.setBackground(resources.getDrawable(R.drawable.arrow_return))
             val likedUserId = adapter.getUserId(viewPager.currentItem)
             viewModel.addLike(likedUserId)
+            navigateToNextUser()
         }
 
         btnPass.setOnClickListener {

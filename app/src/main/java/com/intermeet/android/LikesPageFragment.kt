@@ -32,10 +32,11 @@ class LikesPageFragment(private var recyclerDataArrayList: List<String>) : Fragm
         recyclerView = view.findViewById(R.id.idCourseRV)
 
         //add users that like current users account and send to adapter
-        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        val userId = getCurrentUser()
         //val userRef = FirebaseDatabase.getInstance().getReference("users").child(userId.toString()).child("likes")
         if (userId != null) {
             fetchLikedUsers(userId) { users ->
+                //val filteredUsers : List<String> = filterOutMatch(userId, users.toMutableList())
                 val adapter = RecyclerViewAdapter(users, this, DiscoverActivity())
                 recyclerView.adapter = adapter
 
@@ -69,7 +70,7 @@ class LikesPageFragment(private var recyclerDataArrayList: List<String>) : Fragm
         val userRef = FirebaseDatabase.getInstance().getReference("users").child(userID).child("likes")
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val likedUserIds = snapshot.children.mapNotNull { it.key }
+                val likedUserIds = snapshot.children.mapNotNull { it.key }.toMutableList()
                 callback(likedUserIds)
             }
 
@@ -78,6 +79,38 @@ class LikesPageFragment(private var recyclerDataArrayList: List<String>) : Fragm
                 callback(emptyList()) // Return an empty list in case of error
             }
         })
+    }
+
+    private fun filterOutMatch(userId : String, listOfIds : MutableList<String>) : List<String>
+    {
+        val userRef = FirebaseDatabase.getInstance().getReference("users").child(userId).child("matches")
+        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val matchUserId = snapshot.children.mapNotNull { it.value.toString() }
+
+                val iter = listOfIds.iterator()
+                while(iter.hasNext())
+                {
+                    val id = iter.next()
+                    if(matchUserId.contains(id))
+                    {
+                        iter.remove()
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("ChatFragment", "Error fetching liked user IDs: ${error.message}")
+            }
+        })
+
+        return listOfIds
+    }
+
+    private fun getCurrentUser() : String?
+    {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        return userId
     }
 
     companion object {

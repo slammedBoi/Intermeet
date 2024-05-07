@@ -123,20 +123,33 @@ class DiscoverViewModel : ViewModel() {
                 commonInterestsCount(it.second.interests, currentUser.interests)
             }.map { it.first }.toMutableList()
 
-            var filterOutLikes : List<String> = emptyList()
-            fetchLikedUsers(getCurrentUser()!!){ filteredUsers ->
-                filterOutLikes = filteredUsers
-            }
+            fetchLikedUsers(getCurrentUser()!!) { filteredUsers ->
 
-            for(i in filteredAndSortedIds)
-            {
-                if(filterOutLikes.contains(i))
+                val iterator = filteredAndSortedIds.iterator()
+                while (iterator.hasNext())
                 {
-                    filteredAndSortedIds.removeAt(filteredAndSortedIds.indexOf(i))
+                    val id = iterator.next()
+                    if (filteredUsers.contains(id))
+                    {
+                        iterator.remove() // Safely remove the element using the iterator
+                    }
                 }
+                //filteredUserIdsLiveData.postValue(filteredAndSortedIds)
             }
 
-            filteredUserIdsLiveData.postValue(filteredAndSortedIds)
+            fetchMapUsers(getCurrentUser()!!){filteredMatches ->
+
+                val iterator = filteredAndSortedIds.iterator()
+                while(iterator.hasNext())
+                {
+                    val id = iterator.next()
+                    if(filteredMatches.contains(id))
+                    {
+                        iterator.remove()
+                    }
+                }
+                filteredUserIdsLiveData.postValue(filteredAndSortedIds)
+            }
         }
     }
 
@@ -157,6 +170,20 @@ class DiscoverViewModel : ViewModel() {
             override fun onCancelled(error: DatabaseError) {
                 Log.e("FetchLikedUsers", "Error fetching liked user IDs: ${error.message}")
                 callback(emptyList()) // Return an empty list in case of error
+            }
+        })
+    }
+
+    private fun fetchMapUsers(userID: String, callback: (List<String>) -> Unit) {
+        val userRef = FirebaseDatabase.getInstance().getReference("users").child(userID).child("matches")
+        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val likedUserIds = snapshot.children.mapNotNull { it.value.toString() }
+                callback(likedUserIds)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("ChatFragment", "Error fetching liked user IDs: ${error.message}")
             }
         })
     }
