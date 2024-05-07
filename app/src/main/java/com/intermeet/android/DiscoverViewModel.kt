@@ -117,16 +117,49 @@ class DiscoverViewModel : ViewModel() {
             val usersData = usersDataDeferred.awaitAll().filterNotNull().toMap()
 
             // Filter and sort the users
-            val filteredAndSortedIds = usersData.filter {
+            val filteredAndSortedIds : MutableList<String> = usersData.filter {
                 userMeetsPreferences(it.value, currentUser)
             }.toList().sortedByDescending {
                 commonInterestsCount(it.second.interests, currentUser.interests)
-            }.map { it.first }
+            }.map { it.first }.toMutableList()
+
+            var filterOutLikes : List<String> = emptyList()
+            fetchLikedUsers(getCurrentUser()!!){ filteredUsers ->
+                filterOutLikes = filteredUsers
+            }
+
+            for(i in filteredAndSortedIds)
+            {
+                if(filterOutLikes.contains(i))
+                {
+                    filteredAndSortedIds.removeAt(filteredAndSortedIds.indexOf(i))
+                }
+            }
 
             filteredUserIdsLiveData.postValue(filteredAndSortedIds)
         }
     }
 
+    private fun getCurrentUser() : String?
+    {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        return userId
+    }
+
+    private fun fetchLikedUsers(userID: String, callback: (List<String>) -> Unit) {
+        val userRef = FirebaseDatabase.getInstance().getReference("users").child(userID).child("likes")
+        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val likedUserIds = snapshot.children.mapNotNull { it.key }
+                callback(likedUserIds)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("FetchLikedUsers", "Error fetching liked user IDs: ${error.message}")
+                callback(emptyList()) // Return an empty list in case of error
+            }
+        })
+    }
 
     private suspend fun fetchCurrentUserPreferences(): UserDataModel {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return UserDataModel()

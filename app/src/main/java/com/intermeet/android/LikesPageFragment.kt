@@ -33,7 +33,7 @@ class LikesPageFragment(private var recyclerDataArrayList: List<String>) : Fragm
 
         //add users that like current users account and send to adapter
         val userId = FirebaseAuth.getInstance().currentUser?.uid
-        val userRef = FirebaseDatabase.getInstance().getReference("users").child(userId.toString()).child("likes")
+        //val userRef = FirebaseDatabase.getInstance().getReference("users").child(userId.toString()).child("likes")
         if (userId != null) {
             fetchLikedUsers(userId) { users ->
                 val adapter = RecyclerViewAdapter(users, this, DiscoverActivity())

@@ -34,13 +34,15 @@ class LikesFragment : Fragment() {
     private lateinit var btnPass: Button
     private lateinit var returnButton: View
     private lateinit var progressBar: ProgressBar
-    private var userId: String? = null
+    private var passedUserId: String? = null
+    private val currentUser = FirebaseAuth.getInstance().currentUser?.uid
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         arguments?.let {
-            userId = it.getString(ARG_USER_ID)
+            passedUserId = it.getString(ARG_USER_ID)
         }
         return inflater.inflate(R.layout.fragment_likes_prepage, container, false)
     }
@@ -71,7 +73,7 @@ class LikesFragment : Fragment() {
         returnButton = view.findViewById(R.id.retrieve_lastuser)
         viewPager = view.findViewById(R.id.usersViewPager)
         viewPager.isUserInputEnabled = false
-        adapter = LikesPageAdapter(this, userId!!)
+        adapter = LikesPageAdapter(this, passedUserId!!)
         viewPager.adapter = adapter
         noUsersTextView = view.findViewById(R.id.tvNoUsers)
         progressBar = view.findViewById(R.id.loadingProgressBar)
@@ -86,10 +88,11 @@ class LikesFragment : Fragment() {
         })*/
 
         btnLike.setOnClickListener {
-            val likedUserId = userId//adapter.getUserId(viewPager.currentItem)
+            val likedUserId = passedUserId//adapter.getUserId(viewPager.currentItem)
             Log.d(TAG, "Liked user: " + likedUserId)
             if (likedUserId != null) {
                 addMatch(likedUserId)
+                removeLikedUser(likedUserId)
             }
             //need to implement to remove from someones discover list and then add to chats
 
@@ -97,6 +100,7 @@ class LikesFragment : Fragment() {
 
         btnPass.setOnClickListener {
             //navigateToNextUser()
+            parentFragmentManager.popBackStack()
 
             //need to implement to remove someone from the list
         }
@@ -108,9 +112,9 @@ class LikesFragment : Fragment() {
 
     private fun addMatch(likedUserId : String)
     {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        //val userId = FirebaseAuth.getInstance().currentUser?.uid
         val likedUserDB = FirebaseDatabase.getInstance().getReference("users/$likedUserId/matches")
-        val currentUserDB = FirebaseDatabase.getInstance().getReference("users/$userId/matches")
+        val currentUserDB = FirebaseDatabase.getInstance().getReference("users/$currentUser/matches")
 
 
         likedUserDB.addListenerForSingleValueEvent(object : ValueEventListener{
@@ -120,12 +124,12 @@ class LikesFragment : Fragment() {
                     var listSize = snapshot.childrenCount.toInt()
                     listSize+=1
                     var userField = "user" + listSize.toString()
-                    likedUserDB.updateChildren(mapOf(userField to userId))
+                    likedUserDB.updateChildren(mapOf(userField to currentUser))
                 }
                 else
                 {
                     val userField = "user1"
-                    likedUserDB.updateChildren(mapOf(userField to userId))
+                    likedUserDB.updateChildren(mapOf(userField to currentUser))
                 }
             }
 
@@ -158,6 +162,21 @@ class LikesFragment : Fragment() {
         val intent = Intent(requireContext(), ChatActivity::class.java)
         intent.putExtra("userId", likedUserId)
         startActivity(intent)
+    }
+
+    private fun removeLikedUser(likedUserId : String)
+    {
+        val currentUserDB = FirebaseDatabase.getInstance().getReference("users/$currentUser/likes")
+        val updates = HashMap<String, Any?>()
+        updates[likedUserId] = null
+
+        currentUserDB.updateChildren(updates)
+            .addOnSuccessListener {
+                Log.d(TAG, "Successfully removed")
+            }
+            .addOnFailureListener{
+                Log.d(TAG, "Cannot remove")
+            }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
