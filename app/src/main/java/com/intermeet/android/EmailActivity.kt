@@ -30,7 +30,7 @@ class EmailActivity : AppCompatActivity(){
 
             // Retrieve userDataRepository
             val userDataRepository = getUserDataRepository()
-            val userData = userDataRepository.userData ?: UserDataModel()
+            val userData = UserDataRepository.userData ?: UserDataModel()
 
             userData.email = email
             val intent = Intent(this, PasswordActivity::class.java)

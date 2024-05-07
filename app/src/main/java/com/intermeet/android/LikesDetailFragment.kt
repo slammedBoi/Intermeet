@@ -235,7 +235,7 @@ class LikesDetailFragment : Fragment() {
     }
 
     companion object {
-        private const val ARG_USER_ID = "user_id"
+        const val ARG_USER_ID = "user_id"
 
         fun newInstance(userId: String) =
             LikesDetailFragment().apply {

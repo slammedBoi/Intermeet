@@ -25,7 +25,7 @@ class DescriptionActivity : AppCompatActivity() {
 
             // Retrieve userDataRepository
             val userDataRepository = getUserDataRepository()
-            val userData = userDataRepository.userData ?: UserDataModel()
+            val userData = UserDataRepository.userData ?: UserDataModel()
 
             userData.aboutMeIntro = description
 

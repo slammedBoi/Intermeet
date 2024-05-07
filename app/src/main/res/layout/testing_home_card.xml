@@ -1,0 +1,16 @@
+ <!-- card_item.xml -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp">
+
+    <!-- Your card layout goes here -->
+    <!-- For example, you can have a TextView for the title -->
+    <TextView
+        android:id="@+id/testCard"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Testing">
+    </TextView>
+
+</androidx.cardview.widget.CardView>

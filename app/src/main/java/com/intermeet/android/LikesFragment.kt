@@ -1,6 +1,9 @@
 
+import android.content.ContentValues.TAG
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,25 +14,35 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.viewpager2.widget.ViewPager2
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.intermeet.android.ChatActivity
 import com.intermeet.android.DiscoverViewModel
+import com.intermeet.android.LikesPageAdapter
 import com.intermeet.android.R
-import com.intermeet.android.UsersPagerAdapter
 
-class DiscoverFragment : Fragment() {
+class LikesFragment : Fragment() {
     private val viewModel: DiscoverViewModel by viewModels()
     private lateinit var viewPager: ViewPager2
-    private lateinit var adapter: UsersPagerAdapter
+    private lateinit var adapter: LikesPageAdapter
     private lateinit var noUsersTextView: TextView
     private lateinit var btnRefresh: Button
     private lateinit var btnLike: Button
     private lateinit var btnPass: Button
     private lateinit var returnButton: View
     private lateinit var progressBar: ProgressBar
+    private var userId: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_discover, container, false)
+        arguments?.let {
+            userId = it.getString(ARG_USER_ID)
+        }
+        return inflater.inflate(R.layout.fragment_likes_prepage, container, false)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -58,40 +71,93 @@ class DiscoverFragment : Fragment() {
         returnButton = view.findViewById(R.id.retrieve_lastuser)
         viewPager = view.findViewById(R.id.usersViewPager)
         viewPager.isUserInputEnabled = false
-        adapter = UsersPagerAdapter(this)
+        adapter = LikesPageAdapter(this, userId!!)
         viewPager.adapter = adapter
         noUsersTextView = view.findViewById(R.id.tvNoUsers)
         progressBar = view.findViewById(R.id.loadingProgressBar)
-
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun setupListeners() {
-        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+        /*viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
-                viewModel.markAsSeen(adapter.getUserId(position))
+                userId?.let { viewModel.markAsSeen(it) }
             }
-        })
+        })*/
 
         btnLike.setOnClickListener {
-            returnButton.setBackground(resources.getDrawable(R.drawable.arrow_return))
-            val likedUserId = adapter.getUserId(viewPager.currentItem)
-            viewModel.addLike(likedUserId)
+            val likedUserId = userId//adapter.getUserId(viewPager.currentItem)
+            Log.d(TAG, "Liked user: " + likedUserId)
+            if (likedUserId != null) {
+                addMatch(likedUserId)
+            }
+            //need to implement to remove from someones discover list and then add to chats
+
         }
 
         btnPass.setOnClickListener {
-            returnButton.setBackground(resources.getDrawable(R.drawable.arrow_return_black))
-            navigateToNextUser()
+            //navigateToNextUser()
+
+            //need to implement to remove someone from the list
         }
 
         returnButton.setOnClickListener {
-            returnButton.setBackground(resources.getDrawable(R.drawable.arrow_return))
-            navigateToPreviousUser()
+            parentFragmentManager.popBackStack()
         }
+    }
 
-        btnRefresh.setOnClickListener {
-            fetchUsers(autoRefresh = false)
-        }
+    private fun addMatch(likedUserId : String)
+    {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        val likedUserDB = FirebaseDatabase.getInstance().getReference("users/$likedUserId/matches")
+        val currentUserDB = FirebaseDatabase.getInstance().getReference("users/$userId/matches")
+
+
+        likedUserDB.addListenerForSingleValueEvent(object : ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if(snapshot.exists())
+                {
+                    var listSize = snapshot.childrenCount.toInt()
+                    listSize+=1
+                    var userField = "user" + listSize.toString()
+                    likedUserDB.updateChildren(mapOf(userField to userId))
+                }
+                else
+                {
+                    val userField = "user1"
+                    likedUserDB.updateChildren(mapOf(userField to userId))
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+        })
+
+        currentUserDB.addListenerForSingleValueEvent(object : ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if(snapshot.exists())
+                {
+                    var listSize = snapshot.childrenCount.toInt()
+                    listSize+=1
+                    var userField = "user" + listSize.toString()
+                    currentUserDB.updateChildren(mapOf(userField to likedUserId))
+                }
+                else
+                {
+                    val userField = "user1"
+                    currentUserDB.updateChildren(mapOf(userField to likedUserId))
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+        })
+
+        val intent = Intent(requireContext(), ChatActivity::class.java)
+        intent.putExtra("userId", likedUserId)
+        startActivity(intent)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -110,7 +176,6 @@ class DiscoverFragment : Fragment() {
             }
         }
     }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun displayUserList(userIds: List<String>) {
@@ -143,22 +208,13 @@ class DiscoverFragment : Fragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun navigateToNextUser() {
-        if (viewPager.currentItem < adapter.itemCount - 1) {
-            viewPager.currentItem += 1
-        } else {
-            displayNoUsers()
-        }
-    }
-
-    private fun navigateToPreviousUser() {
-        if (viewPager.currentItem > 0) {
-            viewPager.currentItem -= 1
-        }
-    }
-
     companion object {
-        fun newInstance() = DiscoverFragment()
+        const val ARG_USER_ID = "user_id"
+        fun newInstance(userId: String) =
+            LikesFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_USER_ID, userId)
+                }
+            }
     }
 }

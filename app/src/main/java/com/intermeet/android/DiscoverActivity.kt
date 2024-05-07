@@ -1,7 +1,7 @@
 package com.intermeet.android
 
 import DiscoverFragment
-import android.os.Build
+import android.annotation.SuppressLint import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
@@ -17,6 +17,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.intermeet.android.helperFunc.calculateAgeWithCalendar
 
 class DiscoverActivity : AppCompatActivity() {
 
@@ -36,7 +37,7 @@ class DiscoverActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //val view = inflater.inflate(R.layout.fragment_discover, container, false)
-        setContentView(R.layout.fragment_like)
+        setContentView(R.layout.fragment_discover)
         //var discoverView : View =
 
         textViewName = findViewById(R.id.textViewName)
@@ -130,11 +131,10 @@ class DiscoverActivity : AppCompatActivity() {
         val dbRef = FirebaseDatabase.getInstance().getReference("users/$userId")
 
         dbRef.addValueEventListener(object : ValueEventListener {
-            @RequiresApi(Build.VERSION_CODES.O)
             override fun onDataChange(snapshot: DataSnapshot) {
                 val user = snapshot.getValue(UserDataModel::class.java)
                 user?.let {
-                    textViewName.text = "${it.firstName}, ${calculateAge(it.birthday)}"
+                    textViewName.text = "${it.firstName}, ${calculateAgeWithCalendar(it.birthday)}"
                     tvEducation.text = "${it.school}"
                     tvLocation.text = "${it.longitude}"
                     tvPronouns.text = "${it.pronouns}"
@@ -213,46 +213,6 @@ class DiscoverActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun calculateAge(birthday: String?): Int {
-        // Implement logic to calculate age based on birthday
-        // Example: Parse birthday string, calculate age based on current date, and return age
-        // For brevity, a simplified implementation is shown here:
-        // Note: You may need to handle date parsing and calculation more accurately in a real app.
-
-        if (birthday.isNullOrEmpty()) return 0 // Default age if birthday is not provided
-        var day: Int? = null
-        var month: Int? = null
-        var year: Int? = null
-        val parts = birthday.split("-")
-
-        if (parts.size == 3) {
-            day = parts[0].toIntOrNull()
-            month = parts[1].toIntOrNull()
-            year = parts[2].toIntOrNull()
-
-            if (day != null && month != null && year != null) {
-                println("Day: $day")
-                println("Month: $month")
-                println("Year: $year")
-            }
-        }
-
-        val currentYear = java.time.LocalDate.now().year
-        val currentMonth = java.time.LocalDate.now().monthValue
-        val currentDay = java.time.LocalDate.now().dayOfMonth
-        var currentAge = currentYear - year!!
-        if(currentMonth < month!!) {
-            currentAge -= 1
-        }
-        else if(currentMonth == month!!) {
-            if(currentDay < day!!) {
-                currentAge -= 1
-            }
-        }
-
-        return currentAge
     }
 
 

@@ -35,8 +35,7 @@
         android:background="@drawable/discover_bar"
         android:gravity="center_horizontal"
         android:layout_centerHorizontal="true"
-        android:text="@string/discover_homepage"
-        android:fontFamily="@font/outfitlight"
+        android:text="@string/likes"
         android:textColor="@color/white"
         android:layout_margin="45dp"
         android:textSize="30sp" />
@@ -78,7 +77,6 @@
         android:layout_alignParentBottom="true"
         android:layout_marginStart="16dp"
         android:layout_marginBottom="72dp"
-        android:fontFamily="@font/outfitregular"
         android:text="Pass" />
 
     <ProgressBar
@@ -88,7 +86,6 @@
         android:layout_centerInParent="true"
         style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"
         android:indeterminate="true"
-        android:fontFamily="@font/outfitregular"
         android:visibility="gone" />
 </RelativeLayout>
 

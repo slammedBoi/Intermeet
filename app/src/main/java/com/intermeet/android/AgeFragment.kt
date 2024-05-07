@@ -10,7 +10,7 @@ import android.widget.TextView
 import com.google.android.material.slider.RangeSlider
 
 class AgeFragment : Fragment() {
-    var listener: AgeFragment.OnAgeSelectedListener? = null
+    var listener: OnAgeSelectedListener? = null
 
     private lateinit var rangeSlider: RangeSlider
     private lateinit var tvSelectedRange: TextView

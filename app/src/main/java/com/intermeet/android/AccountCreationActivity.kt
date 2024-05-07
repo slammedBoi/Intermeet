@@ -2,6 +2,7 @@ package com.intermeet.android
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -32,6 +33,8 @@ class AccountCreationActivity : AppCompatActivity() {
         progressBar.visibility = View.VISIBLE
     }
 
+        //val userData = UserDataRepository.userData
+        //check after if broken
     private fun hideLoading() {
         progressBar.visibility = View.GONE
     }
@@ -76,7 +79,7 @@ class AccountCreationActivity : AppCompatActivity() {
     }
 
     private fun uploadImagesToFirebaseStorage(userId: String, onCompletion: (Boolean) -> Unit) {
-        val imageUris = userDataRepository.userData?.photoUris ?: listOf()
+        val imageUris = UserDataRepository.userData?.photoUris ?: listOf()
         val storageRef = FirebaseStorage.getInstance().reference.child("users/$userId/images")
         val imageDownloadUrls = mutableListOf<String>()
 
@@ -101,7 +104,7 @@ class AccountCreationActivity : AppCompatActivity() {
             Tasks.whenAll(uploadTasks).addOnCompleteListener {
                 if (it.isSuccessful) {
                     // Update UserDataModel with the download URLs
-                    userDataRepository.userData?.photoDownloadUrls = imageDownloadUrls
+                    UserDataRepository.userData?.photoDownloadUrls = imageDownloadUrls
                     onCompletion(true)
                 } else {
                     // Handle failure
@@ -116,12 +119,14 @@ class AccountCreationActivity : AppCompatActivity() {
 
 
     private fun storeUserDataToFirebaseDatabase(userId: String) {
-            val userData = userDataRepository.userData?.apply {
+            val userData = UserDataRepository.userData?.apply {
             // Clear sensitive information before storing in the database
             email = null
             password = null
-            userDataRepository.userData?.photoUris?.clear()
+            UserDataRepository.userData?.photoUris?.clear()
         }
+
+        Log.d("UserData", "${UserDataRepository.userData.toString()}")
 
         userData?.let {
             FirebaseDatabase.getInstance().getReference("users/$userId")
@@ -150,6 +155,6 @@ class AccountCreationActivity : AppCompatActivity() {
     private fun navigateToNextActivity() {
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
-        finish()
+        //finish()
     }
 }

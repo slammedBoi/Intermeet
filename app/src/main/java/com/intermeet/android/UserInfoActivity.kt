@@ -4,10 +4,8 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.GridLayout
 import android.widget.NumberPicker
@@ -175,7 +173,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
                 tvGender.text = "${genders[numberPicker.value]} >"
 
                 // Update user data
-                val userData = userDataRepository.userData ?: UserDataModel()
+                val userData = UserDataRepository.userData ?: UserDataModel()
                 userData.gender = selectedGender
             }
             setNegativeButton("Cancel", null)
@@ -199,7 +197,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
                 tvHeight.text = "${heights[numberPicker.value]} >"
 
                 // Update user data
-                val userData = userDataRepository.userData ?: UserDataModel()
+                val userData = UserDataRepository.userData ?: UserDataModel()
                 userData.height = selectedHeight
             }
             setNegativeButton("Cancel", null)
@@ -223,7 +221,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
                 tvReligion.text = "${religion[numberPicker.value]} >"
 
                 // Update user data
-                val userData = userDataRepository.userData ?: UserDataModel()
+                val userData = UserDataRepository.userData ?: UserDataModel()
                 userData.religion = selectedReligion
             }
             setNegativeButton("Cancel", null)
@@ -247,7 +245,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
                 tvEthnicity.text = "${ethnicity[numberPicker.value]} >"
 
                 // Update user data
-                val userData = userDataRepository.userData ?: UserDataModel()
+                val userData = UserDataRepository.userData ?: UserDataModel()
                 userData.ethnicity = selectedEthnicity
             }
             setNegativeButton("Cancel", null)
@@ -271,7 +269,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
                 tvSex.text = "${sexuality[numberPicker.value]} >"
 
                 // Update user data
-                val userData = userDataRepository.userData ?: UserDataModel()
+                val userData = UserDataRepository.userData ?: UserDataModel()
                 userData.sexuality = selectedSex
             }
             setNegativeButton("Cancel", null)
@@ -295,7 +293,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
                 tvDrink.text = "${drinking[numberPicker.value]} >"
 
                 // Update user data
-                val userData = userDataRepository.userData ?: UserDataModel()
+                val userData = UserDataRepository.userData ?: UserDataModel()
                 userData.drinking = selectedDrink
             }
             setNegativeButton("Cancel", null)
@@ -319,7 +317,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
                 tvDrugs.text = "${drugs[numberPicker.value]} >"
 
                 // Update user data
-                val userData = userDataRepository.userData ?: UserDataModel()
+                val userData = UserDataRepository.userData ?: UserDataModel()
                 userData.drugs = selectedDrugs
             }
             setNegativeButton("Cancel", null)
@@ -343,7 +341,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
                 tvSmoking.text = "${smoking[numberPicker.value]} >"
 
                 // Update user data
-                val userData = userDataRepository.userData ?: UserDataModel()
+                val userData = UserDataRepository.userData ?: UserDataModel()
                 userData.smoking = selectedSmoking
             }
             setNegativeButton("Cancel", null)
@@ -367,7 +365,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
                 tvPolitics.text = "${politics[numberPicker.value]} >"
 
                 // Update user data
-                val userData = userDataRepository.userData ?: UserDataModel()
+                val userData = UserDataRepository.userData ?: UserDataModel()
                 userData.politics = selectedPolitics
             }
             setNegativeButton("Cancel", null)
@@ -420,7 +418,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
         backButton.visibility = View.VISIBLE  // Ensures the back button is visible.
 
         // Update user data
-        val userData = userDataRepository.userData ?: UserDataModel()
+        val userData = UserDataRepository.userData ?: UserDataModel()
         userData.occupation = selectedJob
     }
 
@@ -432,7 +430,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
         backButton.visibility = View.VISIBLE  // Ensures the back button is visible.
 
         // Update user data
-        val userData = userDataRepository.userData ?: UserDataModel()
+        val userData = UserDataRepository.userData ?: UserDataModel()
         userData.pronouns = selectedPronoun
     }
 
@@ -462,7 +460,7 @@ class UserInfoActivity : AppCompatActivity(), OccupationFragment.OccupationListe
         backButton.visibility = View.VISIBLE  // Ensures the back button is visible.
 
         // Update user data
-        val userData = userDataRepository.userData ?: UserDataModel()
+        val userData = UserDataRepository.userData ?: UserDataModel()
         userData.interests = selectedTags
     }
 

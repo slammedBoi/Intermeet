@@ -21,7 +21,7 @@ import com.intermeet.android.UserData
 import com.squareup.picasso.Picasso
 
 class RecyclerViewAdapter(
-    private val courseDataArrayList: ArrayList<String>,
+    private val courseDataArrayList: List<String>,
     private val mcontext: LikesPageFragment,
     private val disccontext: DiscoverActivity
 ) : RecyclerView.Adapter<RecyclerViewAdapter.RecyclerViewHolder>() {
@@ -32,14 +32,7 @@ class RecyclerViewAdapter(
     override fun onCreateViewHolder(@NonNull parent: ViewGroup, viewType: Int): RecyclerViewHolder {
         // Inflate Layout
         val view = LayoutInflater.from(parent.context).inflate(R.layout.card_layout, parent, false)
-        /*view.setOnClickListener{
-            val viewUser = DiscoverFragment.newInstance()
-            (viewUser as FragmentActivity).supportFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, viewUser)
-                .commit()
-            true
-        }*/
-        //mcontext.startActivity()
+
         return RecyclerViewHolder(view)
     }
 

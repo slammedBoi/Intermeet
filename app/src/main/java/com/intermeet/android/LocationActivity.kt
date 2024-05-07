@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
+//import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -100,6 +101,30 @@ class LocationActivity : AppCompatActivity() {
                 Log.d("LocationActivity", "Location: ${location.latitude}, ${location.longitude}")
                 startActivity(Intent(this, NotificationActivity::class.java))
             } ?: Toast.makeText(this, "Failed to get current location.", Toast.LENGTH_SHORT).show()
+
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+            .addOnSuccessListener(this) { location ->
+                if (location != null) {
+                    // Logic to handle location object
+                    val userDataRepository = getUserDataRepository()
+                    val userData = UserDataRepository.userData ?: UserDataModel()
+                    userData.latitude = location.latitude
+                    userData.longitude = location.longitude
+
+                }
+            }
+    }
+
+    // Permission request launcher
+    val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                // Permission granted, proceed with getting the current location
+                getCurrentLocation()
+            } else {
+                // Handle the case where permission is denied
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_LONG).show()
+            }
         }
     }
 }

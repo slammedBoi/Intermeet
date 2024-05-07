@@ -26,7 +26,7 @@ class PasswordActivity : AppCompatActivity() {
 
             // Retrieve userDataRepository
             val userDataRepository = getUserDataRepository()
-            val userData = userDataRepository.userData ?: UserDataModel()
+            val userData = UserDataRepository.userData ?: UserDataModel()
             userData.password = password
 
             val intent = Intent(this, BirthdayActivity::class.java)

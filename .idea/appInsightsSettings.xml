@@ -28,7 +28,7 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.intermeet.android" />
-                  <option name="mobileSdkAppId" value="1:1019373308805:android:4b34ab2abeabd6d01112ec" />
+                  <option name="mobileSdkAppId" value="1:1019373308805:android:578d3f6fe1545ff61112ec" />
                   <option name="projectId" value="intermeetiate" />
                   <option name="projectNumber" value="1019373308805" />
                 </ConnectionSetting>

@@ -40,7 +40,18 @@ class ChatFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         val currentUser = getCurrentUserId()
         if (currentUser != null) {
-            fetchLikedUsers(currentUser)
+            fetchMapUsers(currentUser) { users ->
+                val adapter = ChatAdapter(requireContext(), users) { userId ->
+                    startChatWithUser(userId)
+                }
+                listView.adapter = adapter
+            }
+        }
+        // Set item click listener for list view
+        listView.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+            val userId = listView.getItemAtPosition(position) as String
+            startChatWithUser(userId)
+            //fetchLikedUsers(currentUser)
         }
     }
 
@@ -59,7 +70,13 @@ class ChatFragment : Fragment() {
         }
     }
 
-    private fun fetchLikedUsers(userID: String) {
+    private fun fetchMapUsers(userID: String, callback: (List<String>) -> Unit) {
+        val userRef = FirebaseDatabase.getInstance().getReference("users").child(userID).child("matches")
+        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val likedUserIds = snapshot.children.mapNotNull { it.value.toString() }
+                callback(likedUserIds)
+    /*private fun fetchLikedUsers(userID: String) {
         val userRef = FirebaseDatabase.getInstance().getReference("users").child(userID).child("likes")
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -68,7 +85,7 @@ class ChatFragment : Fragment() {
                     updateListView(likedUserIds)
                 } else {
                     Log.d(TAG, "Fragment not attached when data received.")
-                }
+                }*/
             }
 
             override fun onCancelled(error: DatabaseError) {

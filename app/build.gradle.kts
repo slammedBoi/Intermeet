@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
-    id ("androidx.navigation.safeargs.kotlin")
+    id("androidx.navigation.safeargs.kotlin")
     // Other plugins
 
 }
@@ -95,7 +95,6 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:$nav_version")
     // AndroidX Navigation UI
     implementation("androidx.navigation:navigation-ui-ktx:$nav_version")
-    implementation("com.squareup.picasso:picasso:2.8")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation ("com.google.android.libraries.places:places:3.4.0")
     implementation("com.google.maps.android:android-maps-utils:2.2.0")
@@ -107,7 +106,6 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.9.0")
     implementation("com.squareup.picasso:picasso:2.8")
     implementation("com.google.firebase:firebase-appcheck-safetynet:16.1.2")
-
     implementation("androidx.compose.ui:ui-text-google-fonts:1.6.1")
     implementation("com.kizitonwose.calendar:view:2.0.0")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")

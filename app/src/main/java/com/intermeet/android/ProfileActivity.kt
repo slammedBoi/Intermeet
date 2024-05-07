@@ -57,14 +57,8 @@ class ProfileActivity : AppCompatActivity() {
                     val age = calculateAge(birthday)
 
                     tvUserFirstName.text = "$firstName, $age"
-
-
                     }
                 }
-
-
-
-
 
             override fun onCancelled(databaseError: DatabaseError) {
                 // Log any errors
@@ -101,7 +95,6 @@ class ProfileActivity : AppCompatActivity() {
         }
 
     }
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateAge(birthday: String?): Int {
         // Implement logic to calculate age based on birthday
         // Example: Parse birthday string, calculate age based on current date, and return age

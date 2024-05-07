@@ -67,6 +67,6 @@ class PhotoUploadActivity : AppCompatActivity() {
     private fun storeSelectedUris() {
         val userDataRepository = getUserDataRepository()
         // Filter out null URIs and store the list in userData repository
-        userDataRepository.userData?.photoUris = imageUris.filterNotNull().toMutableList()
+        UserDataRepository.userData?.photoUris = imageUris.filterNotNull().toMutableList()
     }
 }
