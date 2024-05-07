@@ -114,17 +114,17 @@ class LocationActivity : AppCompatActivity() {
                 }
             }
     }
-
+    //This code fucked up the program
     // Permission request launcher
-    val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) {
-                // Permission granted, proceed with getting the current location
-                getCurrentLocation()
-            } else {
-                // Handle the case where permission is denied
-                Toast.makeText(this, "Location permission denied", Toast.LENGTH_LONG).show()
-            }
-        }
+    //val requestPermissionLauncher =
+    //    registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+    //        if (isGranted) {
+    //            // Permission granted, proceed with getting the current location
+    //            getCurrentLocation()
+    //        } else {
+    //            // Handle the case where permission is denied
+    //            Toast.makeText(this, "Location permission denied", Toast.LENGTH_LONG).show()
+    //        }
+    //    }
     }
 }

@@ -109,5 +109,6 @@ dependencies {
     implementation("androidx.compose.ui:ui-text-google-fonts:1.6.1")
     implementation("com.kizitonwose.calendar:view:2.0.0")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    implementation("com.github.yuyakaido:CardStackView:v2.3.4")
 }
 

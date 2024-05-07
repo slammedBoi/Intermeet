@@ -417,7 +417,10 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
     private fun showEventCard(event: Event) {
         val dialog = Dialog(requireContext())
         dialog.setContentView(R.layout.event_details_card)
-        //dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        val participant1 = dialog.findViewById<ImageView>(R.id.participant1)
+        val participant2 = dialog.findViewById<ImageView>(R.id.participant2)
+        val participant3 = dialog.findViewById<ImageView>(R.id.participant3)
+        val moreParticipantsText = dialog.findViewById<TextView>(R.id.more_participants)
 
         val eventCardImage = dialog.findViewById<ImageView>(R.id.event_image)
         Glide.with(requireContext())
@@ -439,23 +442,95 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
         val eventCardDistance = dialog.findViewById<TextView>(R.id.event_distance)
         val fullAddress = event.addressList.joinToString(", ")
         val coords = performGeocoding(fullAddress)
-        eventCardDistance.text = "${calculateDistance(currentCoords, coords).toString()} mi"
+        eventCardDistance.text = "${calculateDistance(currentCoords, coords)} mi"
 
-        var amountGoing = event.peopleGoing.size
-        Log.d("showEventCard", "People going ${amountGoing}")
+        val eventRef = FirebaseDatabase.getInstance().getReference("events").child(event.id).child("peopleGoing")
         val goingText = dialog.findViewById<TextView>(R.id.going_text)
-        goingText.text = "Going (${amountGoing})"
 
-        val participant1 = dialog.findViewById<ImageView>(R.id.participant1)
-        val participant2 = dialog.findViewById<ImageView>(R.id.participant2)
-        val participant3 = dialog.findViewById<ImageView>(R.id.participant3)
-        val moreParticipantsText = dialog.findViewById<TextView>(R.id.more_participants)
+        val peopleGoingEventListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val peopleGoing = snapshot.children.mapNotNull { it.getValue(String::class.java) }
+                goingText.text = "Going (${peopleGoing.size})"
+
+                fetchUsersGoingToEvent(event.id) { users ->
+                    if(users.isNotEmpty()) {
+                        participantText.visibility = View.GONE
+                        fetchUserDetails(users[0]) { user ->
+                            if (user.photoDownloadUrls.isNotEmpty()) {
+                                context?.let {
+                                    Glide.with(it)
+                                        .load(user.photoDownloadUrls.firstOrNull())
+                                        .override(100, 100) // Set fixed size
+                                        .circleCrop()
+                                        .into(participant1)
+                                }
+                            }
+                        }
+
+                        // One participant
+                        if(users.size > 1) {
+                            fetchUserDetails(users[1]) { user ->
+                                if (user.photoDownloadUrls.isNotEmpty()) {
+                                    context?.let {
+                                        Glide.with(it)
+                                            .load(user.photoDownloadUrls.firstOrNull())
+                                            .override(100, 100) // Set fixed size
+                                            .circleCrop()
+                                            .into(participant2)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Two participants
+                        if(users.size > 2) {
+                            fetchUserDetails(users[2]) { user ->
+                                if (user.photoDownloadUrls.isNotEmpty()) {
+                                    context?.let {
+                                        Glide.with(it)
+                                            .load(user.photoDownloadUrls.firstOrNull())
+                                            .override(100, 100) // Set fixed size
+                                            .circleCrop()
+                                            .into(participant3)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Three or more participants
+                        if (users.size > 3) {
+                            val additionalCount = users.size - 3
+                            moreParticipantsText.text = "+$additionalCount"
+                            moreParticipantsText.visibility = View.VISIBLE
+                        } else {
+                            moreParticipantsText.visibility = View.GONE
+                        }
+                    }
+                    else {
+                        participantText.visibility = View.VISIBLE
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("EventCard", "Failed to listen for changes in people going: ${error.message}")
+            }
+        }
+        eventRef.addValueEventListener(peopleGoingEventListener)
+
         participantText = dialog.findViewById(R.id.participant_text)
         fetchUsersGoingToEvent(event.id) { users ->
             if(users.isNotEmpty()) {
+                participantText.visibility = View.GONE
                 fetchUserDetails(users[0]) { user ->
                     if (user.photoDownloadUrls.isNotEmpty()) {
-                        context?.let { Glide.with(it).load(user.photoDownloadUrls[0]).circleCrop().into(participant1) }
+                        context?.let {
+                            Glide.with(it)
+                                .load(user.photoDownloadUrls.firstOrNull())
+                                .override(100, 100) // Set fixed size
+                                .circleCrop()
+                                .into(participant1)
+                        }
                     }
                 }
 
@@ -464,7 +539,11 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
                     fetchUserDetails(users[1]) { user ->
                         if (user.photoDownloadUrls.isNotEmpty()) {
                             context?.let {
-                                Glide.with(it).load(user.photoDownloadUrls[0]).circleCrop().into(participant2)
+                                Glide.with(it)
+                                    .load(user.photoDownloadUrls.firstOrNull())
+                                    .override(100, 100) // Set fixed size
+                                    .circleCrop()
+                                    .into(participant2)
                             }
                         }
                     }
@@ -475,7 +554,11 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
                     fetchUserDetails(users[2]) { user ->
                         if (user.photoDownloadUrls.isNotEmpty()) {
                             context?.let {
-                                Glide.with(it).load(user.photoDownloadUrls[0]).circleCrop().into(participant3)
+                                Glide.with(it)
+                                    .load(user.photoDownloadUrls.firstOrNull())
+                                    .override(100, 100) // Set fixed size
+                                    .circleCrop()
+                                    .into(participant3)
                             }
                         }
                     }
@@ -492,10 +575,6 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
             }
             else {
                 participantText.visibility = View.VISIBLE
-                participant1.visibility = View.GONE
-                participant2.visibility = View.GONE
-                participant3.visibility = View.GONE
-
             }
         }
 
@@ -538,12 +617,14 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
             val currentUserId = getCurrentUserId()
             if (currentUserId != null) {
                 addUserIdToEvent(event.id, currentUserId)
-
-                amountGoing++
-                goingText.text = "Going (${amountGoing})"
             }
         }
         dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+
+        dialog.setOnDismissListener {
+            eventRef.removeEventListener(peopleGoingEventListener)
+        }
+
         dialog.show()
     }
 
@@ -561,10 +642,6 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
                 Log.e("UserAdapter", "Failed to fetch user details: ${error.message}")
             }
         })
-    }
-
-    private fun dpToPx(dp: Int, context: Context): Int {
-        return (dp * context.resources.displayMetrics.density).toInt()
     }
 
     private fun getCurrentUserId(): String? {
@@ -764,7 +841,6 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
             val description = eventObject.getString("description")
             val thumbnail = eventObject.getString("thumbnail")
             val peopleGoing = mutableListOf<String>()
-            peopleGoing.add(0,"dummy")
             val event = Event("", title, startDate, whenInfo, addressList, link, description, thumbnail, peopleGoing)
             uploadEvent(event)
         }

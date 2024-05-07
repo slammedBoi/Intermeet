@@ -6,26 +6,33 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.content.Intent
-import android.view.MenuItem
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import android.widget.Button
-import android.widget.CalendarView
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.TimePicker
+import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.view.children
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import java.time.Instant
-import java.time.ZoneId
+import com.kizitonwose.calendar.core.CalendarDay
+import com.kizitonwose.calendar.core.DayPosition
+import com.kizitonwose.calendar.core.daysOfWeek
+import com.kizitonwose.calendar.view.MonthDayBinder
+import com.kizitonwose.calendar.view.ViewContainer
+import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
+import java.util.UUID
 
 
 class ChatActivity : AppCompatActivity() {
@@ -42,20 +49,19 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var mDbRef: DatabaseReference
     private lateinit var userName: TextView
     private lateinit var calenderIcon: ImageView
-    private lateinit var calendarView: CalendarView
+    private lateinit var calendarMonth: TextView
+    private lateinit var calendarView: com.kizitonwose.calendar.view.CalendarView
     private lateinit var hangoutName: EditText
     private lateinit var hangoutTimeBegin: TextView
     private lateinit var hangoutTimeEnd: TextView
     private lateinit var hangoutLocation: EditText
     private lateinit var hangoutDescription: EditText
     private lateinit var saveEventButton: Button
-    private lateinit var stringDateSelected: String
     private lateinit var addHangoutButton: ImageButton
     private lateinit var timePickerSpinner: TimePicker
-    private lateinit var currentHangoutName: TextView
-    private lateinit var currentHangoutTime: TextView
-    private lateinit var currentHangoutLocation: TextView
-    private lateinit var currentHangoutDescription: TextView
+    private lateinit var hangoutList: RecyclerView
+    private var selectedDate: LocalDate? = null
+    private val today = LocalDate.now()
 
     var receiverRoom: String? = null
     var senderRoom: String? = null
@@ -135,7 +141,6 @@ class ChatActivity : AppCompatActivity() {
 
     }
 
-
     private fun fetchUserName(userId: String) {
         val userRef = FirebaseDatabase.getInstance().getReference("users").child(userId)
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -162,62 +167,229 @@ class ChatActivity : AppCompatActivity() {
     private fun showCalendarDialog() {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.calendar_view)
-
+        calendarMonth = dialog.findViewById(R.id.calendar_month)
         calendarView = dialog.findViewById(R.id.calendar_view)
         addHangoutButton = dialog.findViewById(R.id.add_hangout_button)
-        currentHangoutName = dialog.findViewById(R.id.selected_hangout_name)
-        currentHangoutTime = dialog.findViewById(R.id.selected_hangout_time)
-        currentHangoutLocation = dialog.findViewById(R.id.selected_hangout_location)
-        currentHangoutDescription = dialog.findViewById(R.id.selected_hangout_description)
+        hangoutList = dialog.findViewById(R.id.hangout_list)
+        setupHangoutRecyclerView()
 
-        calendarView.setOnDateChangeListener { view, year, month, dayOfMonth ->
-            stringDateSelected = "$year-${month + 1}-$dayOfMonth"
-            Log.d("Calendar", stringDateSelected)
-            calendarClicked()
+        class DayViewContainer(view: View) : ViewContainer(view) {
+            lateinit var day: CalendarDay
+            val textView = view.findViewById<TextView>(R.id.calendarDayText)
+            val dotView = view.findViewById<View>(R.id.hangoutDot)
+
+            init {
+                view.setOnClickListener {
+                    if(day.position == DayPosition.MonthDate) {
+                        selectDate(day.date)
+                    }
+                }
+            }
+        }
+
+        // Individual day cells
+        calendarView.dayBinder = object : MonthDayBinder<DayViewContainer> {
+            override fun create(view: View) = DayViewContainer(view)
+
+            override fun bind(container: DayViewContainer, data: CalendarDay) {
+                container.textView.text = data.date.dayOfMonth.toString()
+                container.day = data
+                if(data.position == DayPosition.MonthDate) {
+                    container.textView.visibility = View.VISIBLE
+                    when(data.date) {
+                        today -> {
+                            container.dotView.visibility = View.GONE
+                        }
+                        selectedDate -> {
+                            container.textView.setBackgroundResource(R.drawable.hangout_dot)
+                            container.dotView.visibility = View.GONE
+                        }
+                        else -> {
+                            container.textView.background = null
+                            mDbRef.child("chats").child(senderRoom!!).child("calendar").child(data.date.toString()).addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    val hangout = snapshot.getValue(Hangout::class.java)
+                                    if (hangout != null) {
+                                        container.dotView.visibility = View.VISIBLE
+                                    }
+                                }
+
+                                override fun onCancelled(databaseError: DatabaseError) {
+                                    // Handle error
+                                }
+                            })
+                        }
+                    }
+                }
+                else {
+                    container.textView.visibility = View.GONE
+                    container.dotView.visibility = View.GONE
+                }
+            }
+        }
+
+        val currentMonth = YearMonth.now()
+        val startMonth = currentMonth.minusMonths(100)  // Adjust as needed
+        val endMonth = currentMonth.plusMonths(100)  // Adjust as needed
+        val daysOfWeek = daysOfWeek()
+        calendarView.setup(startMonth, endMonth, daysOfWeek.first())
+        calendarView.scrollToMonth(currentMonth)
+
+        val titlesContainer = dialog.findViewById<ViewGroup>(R.id.titlesContainer)
+        titlesContainer.children
+            .map { it as TextView }
+            .forEachIndexed { index, textView ->
+                val dayOfWeek = daysOfWeek[index]
+                val title = dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                textView.text = title
+            }
+
+        calendarView.monthScrollListener = {
+            val titleFormatter = DateTimeFormatter.ofPattern("MMMM yyyy")
+            calendarMonth.text = titleFormatter.format(it.yearMonth)
         }
 
         addHangoutButton.setOnClickListener {
             showAddHangout()
         }
 
+
         dialog.show()
     }
 
-    private fun calendarClicked() {
-        mDbRef.child("chats").child(senderRoom!!).child("calendar").child(stringDateSelected).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val hangout = snapshot.getValue(Hangout::class.java)
-                if (hangout != null) {
-                    currentHangoutName.text = hangout.name
-                    currentHangoutName.visibility = View.VISIBLE
-                    currentHangoutTime.text = "${hangout.beginTime} - ${hangout.endTime}"
-                    currentHangoutTime.visibility = View.VISIBLE
-                    currentHangoutLocation.text = hangout.location
-                    currentHangoutLocation.visibility = View.VISIBLE
-                    currentHangoutDescription.text = hangout.description
-                    currentHangoutDescription.visibility = View.VISIBLE
-                }
-                else {
-                    currentHangoutName.visibility = View.GONE
-                    currentHangoutTime.visibility = View.GONE
-                    currentHangoutLocation.visibility = View.GONE
-                    currentHangoutDescription.visibility = View.GONE
-
-                }
+    private fun setupHangoutRecyclerView() {
+        hangoutList.layoutManager = LinearLayoutManager(this)
+        hangoutList.adapter = HangoutAdapter(ArrayList(), this,
+            onDeleteClick = { hangout ->
+                // Implement deletion logic here
+                deleteHangout(hangout)
+            },
+            onEditClick = { hangout ->
+                // Implement edit logic here
+                showEditHangoutDialog(hangout)
             }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Handle error
-            }
-        })
+        )
     }
 
+    private fun selectDate(date: LocalDate) {
+        if (selectedDate != date) {
+            val oldDate = selectedDate
+            selectedDate = date
+            oldDate?.let { calendarView.notifyDateChanged(it) }
+            calendarView.notifyDateChanged(date)
+            updateAdapterForDate(date)
+        }
+    }
+
+    // Update RecycleView with list of Hangouts
+    private fun updateAdapterForDate(date: LocalDate) {
+        val dateStr = date.toString()
+        val hangouts = ArrayList<Hangout>()  // This list will hold new hangouts or be empty.
+
+        mDbRef.child("chats").child(senderRoom!!).child("calendar").child(dateStr)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    hangouts.clear()  // Clear previous entries.
+                    for (hangoutSnapshot in snapshot.children) {
+                        val hangout = hangoutSnapshot.getValue(Hangout::class.java)
+                        hangout?.let { hangouts.add(it) }
+                    }
+                    // Update the RecyclerView with new data or clear it if no data.
+                    updateRecyclerView(hangouts)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(applicationContext, "Failed to fetch hangouts: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
+    private fun updateRecyclerView(hangouts: List<Hangout>) {
+        if (hangoutList.adapter == null) {
+            hangoutList.adapter = HangoutAdapter(hangouts, this,
+                onDeleteClick = { hangout ->
+                    deleteHangout(hangout)
+                },
+                onEditClick = { hangout ->
+                    showEditHangoutDialog(hangout)
+                }
+            )
+        } else {
+            (hangoutList.adapter as HangoutAdapter).hangouts = hangouts
+            (hangoutList.adapter as HangoutAdapter).notifyDataSetChanged()
+        }
+    }
+
+    private fun showEditHangoutDialog(hangout: Hangout) {
+        val dialog = Dialog(this)
+        dialog.setContentView(R.layout.add_hangout_view)
+        val hangoutName = dialog.findViewById<EditText>(R.id.hangout_name_text)
+        val hangoutTimeBegin = dialog.findViewById<TextView>(R.id.hangout_time_begin_text)
+        val hangoutTimeEnd = dialog.findViewById<TextView>(R.id.hangout_time_end_text)
+        val hangoutLocation = dialog.findViewById<EditText>(R.id.hangout_location_text)
+        val hangoutDescription = dialog.findViewById<EditText>(R.id.hangout_description_text)
+        val saveEventButton = dialog.findViewById<Button>(R.id.save_event_button)
+
+        hangoutName.setText(hangout.name)
+        hangoutTimeBegin.text = hangout.beginTime
+        hangoutTimeEnd.text = hangout.endTime
+        hangoutLocation.setText(hangout.location)
+        hangoutDescription.setText(hangout.description)
+
+        saveEventButton.setOnClickListener {
+            val updatedHangout = hangout.copy(
+                name = hangoutName.text.toString(),
+                beginTime = hangoutTimeBegin.text.toString(),
+                endTime = hangoutTimeEnd.text.toString(),
+                location = hangoutLocation.text.toString(),
+                description = hangoutDescription.text.toString()
+            )
+            updateHangout(hangout.id!!, updatedHangout)
+            dialog.dismiss()
+        }
+        dialog.show()
+    }
+
+
+    private fun updateHangout(hangoutId: String, newHangout: Hangout) {
+        selectedDate?.let { date ->
+            val dateStr = date.toString()
+            mDbRef.child("chats").child(senderRoom!!).child("calendar").child(dateStr).child(hangoutId)
+                .setValue(newHangout)
+                .addOnSuccessListener {
+                    Toast.makeText(this, "Hangout updated successfully", Toast.LENGTH_SHORT).show()
+                    updateAdapterForDate(date)  // Refresh the list
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Failed to update hangout", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+
+    private fun deleteHangout(hangout: Hangout) {
+        selectedDate?.let { date ->
+            mDbRef.child("chats").child(senderRoom!!).child("calendar").child(date.toString()).child(hangout.id!!)
+                .removeValue()
+                .addOnSuccessListener {
+                    Toast.makeText(this, "Hangout deleted successfully", Toast.LENGTH_SHORT).show()
+                    updateAdapterForDate(date)  // Refresh the list
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Failed to delete hangout", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+
     private fun buttonSaveEvent(hangout: Hangout) {
-        mDbRef.child("chats").child(senderRoom!!).child("calendar").child(stringDateSelected)
+        val hangoutName = hangout.name
+        mDbRef.child("chats").child(senderRoom!!).child("calendar").child(selectedDate.toString()).child(hangout.id!!)
             .setValue(hangout).addOnSuccessListener {
-                mDbRef.child("chats").child(receiverRoom!!).child("calendar").child(stringDateSelected)
+                mDbRef.child("chats").child(receiverRoom!!).child("calendar").child(selectedDate.toString()).child(hangout.id!!)
                     .setValue(hangout)
             }
+        selectedDate?.let { updateAdapterForDate(it) }
     }
 
     private fun showAddHangout() {
@@ -238,13 +410,16 @@ class ChatActivity : AppCompatActivity() {
             showTimePickerDialog("end")
         }
 
+
         saveEventButton.setOnClickListener {
+            val uniqueID = UUID.randomUUID().toString()
             val hangout = Hangout(
-                hangoutName.getText().toString(),
-                hangoutTimeBegin.getText().toString(),
-                hangoutTimeEnd.getText().toString(),
-                hangoutLocation.getText().toString(),
-                hangoutDescription.getText().toString()
+                id = uniqueID,
+                name = hangoutName.getText().toString(),
+                beginTime = hangoutTimeBegin.getText().toString(),
+                endTime = hangoutTimeEnd.getText().toString(),
+                location = hangoutLocation.getText().toString(),
+                description = hangoutDescription.getText().toString()
             )
 
             buttonSaveEvent(hangout)
@@ -296,7 +471,6 @@ class ChatActivity : AppCompatActivity() {
         }
         finish()
     }
-
 
     override fun onResume() {
         super.onResume()
