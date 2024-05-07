@@ -81,7 +81,26 @@ class DiscoverFragment : Fragment() {
     }
 
     private fun setupListeners() {
+        /*viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                viewModel.markAsSeen(adapter.getUserId(position))
+            }
+        })
+
+        btnLike.setOnClickListener {
+            returnButton.setBackground(resources.getDrawable(R.drawable.arrow_return))
+            val likedUserId = adapter.getUserId(viewPager.currentItem)
+            viewModel.addLike(likedUserId)
+            navigateToNextUser()
+        }
+
+        btnPass.setOnClickListener {
+            returnButton.setBackground(resources.getDrawable(R.drawable.arrow_return_black))
+            navigateToNextUser()
+        }*/
+
         Log.d("DiscoverFragment", "setupListeners executed")
+
         returnButton.setOnClickListener {
             Log.d("DiscoverFragment", "Return button clicked")
             cardStackView.rewind()
