@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         Places.initialize(applicationContext, "@string/google_maps_key")
         updateFCMToken()
+        storeCurrentUserId()
 
         bottomNav = findViewById(R.id.bottom_nav)
         setupNavigation()
@@ -87,6 +88,17 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+    }
+    private fun storeCurrentUserId() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            // Optionally, use SharedPreferences to save the user ID
+            val prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+            prefs.edit().putString("UserId", userId).apply()
+
+            // Alternatively, pass this userId to your ViewModel if it's already set up to accept it
+            // viewModel.setUserId(userId)
         }
     }
 }

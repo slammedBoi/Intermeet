@@ -24,7 +24,8 @@ class CardStackAdapter(private val context: Context, private var users: MutableL
             // Bind user data to the views
             val textViewName: TextView = view.findViewById(R.id.textViewName)
             textViewName.text = "${user.firstName}, ${calculateAgeWithCalendar(user.birthday)}"
-
+            val textViewHeight: TextView = view.findViewById(R.id.tvHeight)
+            textViewHeight.text = user.height
             val tvEducation: TextView = view.findViewById(R.id.tvEducation)
             tvEducation.text = user.school
             val tvLocation: TextView = view.findViewById(R.id.tvLocation)
@@ -173,6 +174,9 @@ class CardStackAdapter(private val context: Context, private var users: MutableL
             notifyItemRemoved(position)
 
         }
+    }
+    fun getUserIdAtPosition(position: Int): String {
+        return users.getOrNull(position)?.userId ?: throw IllegalStateException("User at position $position not found")
     }
 
     override fun getItemCount(): Int = users.size

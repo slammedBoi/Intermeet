@@ -169,12 +169,15 @@ class DiscoverFragment : Fragment() {
             }
 
             override fun onCardSwiped(direction: Direction) {
+                val position = manager.topPosition - 1
                 // Log the swipe direction and position
                 Log.d("DiscoverFragment", "Card swiped at position: ${manager.topPosition - 1}")
 
                 // Trigger animations and user removal based on swipe direction
                 when (direction) {
                     Direction.Right -> {
+                        val likedUserId = adapter.getUserIdAtPosition(position)  // Assuming you have this method in your adapter
+                        viewModel.addLike(likedUserId)
                         triggerLikeAnimation()
                         removeUserFromAdapter(manager.topPosition - 1)
                     }
