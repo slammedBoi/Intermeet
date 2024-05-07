@@ -1,9 +1,8 @@
 package com.intermeet.android
 
 import android.content.ContentValues.TAG
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,6 +16,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import queryNearbyUsers
+import java.time.Instant
 import java.time.LocalDate
 import java.time.Period
 import java.time.format.DateTimeFormatter
@@ -29,6 +29,10 @@ class DiscoverViewModel : ViewModel() {
     val userData: MutableLiveData<UserDataModel?> = _userData
 
     val filteredUserIdsLiveData = MutableLiveData<List<String>>()
+
+    private val _filteredUsers = MutableLiveData<List<UserDataModel>>()
+    val filteredUsers: LiveData<List<UserDataModel>> = _filteredUsers
+
 
     fun fetchUserData(userId: String) {
         viewModelScope.launch {
@@ -46,7 +50,6 @@ class DiscoverViewModel : ViewModel() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun fetchAndFilterUsers() {
         fetchCurrentUserLocationAndQueryNearbyUsers()  // Fetch nearby users first
         _nearbyUserIdsLiveData.observeForever { userIds ->
@@ -95,7 +98,6 @@ class DiscoverViewModel : ViewModel() {
         })
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun filterUserIdsByPreference(userIds: List<String>) {
         viewModelScope.launch {
             val currentUser = fetchCurrentUserPreferences()
@@ -104,8 +106,7 @@ class DiscoverViewModel : ViewModel() {
 
             val usersDataDeferred = userIds.map { userId ->
                 async {
-                    val userData =
-                        userRef.child(userId).get().await().getValue(UserDataModel::class.java)
+                    val userData = userRef.child(userId).get().await().getValue(UserDataModel::class.java)
                     if (userData != null && !seenUserIds.contains(userId)) {
                         userId to userData
                     } else {
@@ -117,10 +118,11 @@ class DiscoverViewModel : ViewModel() {
             val usersData = usersDataDeferred.awaitAll().filterNotNull().toMap()
 
             // Filter and sort the users
-            val filteredAndSortedIds : MutableList<String> = usersData.filter {
+            val filteredAndSortedIds = usersData.filter {
                 userMeetsPreferences(it.value, currentUser)
             }.toList().sortedByDescending {
                 commonInterestsCount(it.second.interests, currentUser.interests)
+
             }.map { it.first }.toMutableList()
 
             fetchLikedUsers(getCurrentUser()!!) { filteredUsers ->
@@ -150,6 +152,13 @@ class DiscoverViewModel : ViewModel() {
                 }
                 filteredUserIdsLiveData.postValue(filteredAndSortedIds)
             }
+
+            /*}.map { it.first }
+
+            // Fetch full user details for the filtered and sorted IDs and update LiveData
+            val filteredUsers = fetchUsersData(filteredAndSortedIds)
+            _filteredUsers.postValue(filteredUsers) // Post the detailed data to LiveData
+            filteredUserIdsLiveData.postValue(filteredAndSortedIds) // Post filtered IDs for any other use*/
         }
     }
 
@@ -173,7 +182,6 @@ class DiscoverViewModel : ViewModel() {
             }
         })
     }
-
     private fun fetchMapUsers(userID: String, callback: (List<String>) -> Unit) {
         val userRef = FirebaseDatabase.getInstance().getReference("users").child(userID).child("matches")
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -207,7 +215,17 @@ class DiscoverViewModel : ViewModel() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun fetchUsersData(userIds: List<String>): List<UserDataModel> {
+        val userRef = FirebaseDatabase.getInstance().getReference("users")
+        return userIds.mapNotNull { userId ->
+            try {
+                userRef.child(userId).get().await().getValue(UserDataModel::class.java)
+            } catch (e: Exception) {
+                Log.e("DiscoverViewModel", "Failed to fetch data for user $userId", e)
+                null
+            }
+        }
+    }
     private fun userMeetsPreferences(user: UserDataModel, currentUser: UserDataModel): Boolean {
 
         val preferenceFields = listOf(
@@ -230,8 +248,9 @@ class DiscoverViewModel : ViewModel() {
         }
 
         for (prefField in preferenceFields) {
-            val userValue = user::class.java.getDeclaredField(prefField).apply { isAccessible = true }.get(user) as String
-            val currentUserPreference = currentUser::class.java.getDeclaredField(prefField).apply { isAccessible = true }.get(currentUser) as String
+            val userValue = user::class.java.getDeclaredField(prefField).apply { isAccessible = true }.get(user) as? String ?: "Default or Error Handling Value"
+            val currentUserPreference = currentUser::class.java.getDeclaredField(prefField).apply { isAccessible = true }.get(currentUser) as? String ?: "Default or Error Handling Value"
+
 
             if (currentUserPreference == "Open to all" || currentUserPreference == userValue) {
                 score++
@@ -240,6 +259,7 @@ class DiscoverViewModel : ViewModel() {
         }
         Log.d("DiscoverViewModel", "Total Score rn ${score}")
         return score >= 3
+        //return true
 
 
     }
@@ -254,7 +274,6 @@ class DiscoverViewModel : ViewModel() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun ageWithinRange(birthday: String?, minAge: Int?, maxAge: Int?): Boolean {
         if (birthday == null) return false
         return try {

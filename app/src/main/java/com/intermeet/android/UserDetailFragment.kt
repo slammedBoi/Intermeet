@@ -21,6 +21,7 @@ import com.google.android.flexbox.JustifyContent
 import com.intermeet.android.helperFunc.calculateAgeWithCalendar
 
 class UserDetailFragment : Fragment() {
+    private lateinit var height : TextView
     private lateinit var textViewName: TextView
     private lateinit var cardView: CardView
     private lateinit var cardView2: CardView
@@ -53,6 +54,7 @@ class UserDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        height = view.findViewById(R.id.tvHeight)
         textViewName = view.findViewById(R.id.textViewName)
         cardView = view.findViewById(R.id.cardView)
         cardView2 = view.findViewById(R.id.cardView2)
@@ -81,6 +83,7 @@ class UserDetailFragment : Fragment() {
     }
 
     private fun updateUserUI(user: UserDataModel) {
+        height.text = user.height
         textViewName.text = "${user.firstName}, ${calculateAgeWithCalendar(user.birthday)}"
         tvEducation.text = user.school
         tvLocation.text = "${user.latitude}, ${user.longitude}"

@@ -42,7 +42,6 @@ class ChatAdapter(context: Context, private val userIds: List<String>,  private 
                 onItemClick(userId)
             }
         }
-
         return view
     }
 

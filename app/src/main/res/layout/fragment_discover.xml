@@ -1,29 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/usersViewPager"
+
+    <com.yuyakaido.android.cardstackview.CardStackView
+        android:id="@+id/usersCardStackView"
         android:layout_width="match_parent"
         android:layout_height="687dp"
         android:layout_below="@+id/frame_2"
         android:layout_marginTop="-38dp" />
 
-    <!--<View
+    <View
         android:id="@+id/return_button"
         android:layout_width="40dp"
         android:layout_height="38dp"
         android:background="@drawable/resource_return"
-        android:layout_marginEnd="48dp"
-        android:layout_marginTop="45dp"
-        android:layout_marginStart="23dp"/>-->
-
-    <View
-        android:id="@+id/retrieve_lastuser"
-        android:layout_width="40dp"
-        android:layout_height="38dp"
-        android:background="@drawable/arrow_return"
         android:layout_marginEnd="48dp"
         android:layout_marginTop="45dp"
         android:layout_marginStart="23dp"/>
@@ -36,7 +29,6 @@
         android:gravity="center_horizontal"
         android:layout_centerHorizontal="true"
         android:text="@string/discover_homepage"
-        android:fontFamily="@font/outfitlight"
         android:textColor="@color/white"
         android:layout_margin="45dp"
         android:textSize="30sp" />
@@ -51,35 +43,16 @@
         android:textSize="18sp"
         android:padding="16dp" />
 
-    <Button
-        android:id="@+id/btnLike"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="72dp"
-        android:text="Like" />
-
-    <Button
+    <TextView
         android:id="@+id/btnRefresh"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/tvNoUsers"
         android:text="@string/review"
         android:visibility="gone"
+        android:background="@drawable/discover_button"
+        android:gravity="center"
         android:layout_centerHorizontal="true"/>
-
-    <Button
-        android:id="@+id/btnPass"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="72dp"
-        android:fontFamily="@font/outfitregular"
-        android:text="Pass" />
 
     <ProgressBar
         android:id="@+id/loadingProgressBar"
@@ -88,7 +61,26 @@
         android:layout_centerInParent="true"
         style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"
         android:indeterminate="true"
-        android:fontFamily="@font/outfitregular"
         android:visibility="gone" />
+
+
+    <FrameLayout
+        android:id="@+id/like_animation_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <FrameLayout
+        android:id="@+id/pass_animation_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!--    <it.fabiosassu.stackexpandableview.StackExpandableView-->
+    <!--        android:id="@+id/stackExpandableView"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="match_parent"-->
+    <!--        android:visibility="gone"-->
+    <!--        android:background="#CCFFFFFF"-->
+    <!--        app:orientation="vertical"/>-->
+
 </RelativeLayout>
 

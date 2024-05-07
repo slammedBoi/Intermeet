@@ -5,11 +5,11 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/calendar_title"
+        android:id="@+id/calendar_month"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toStartOf="@id/add_hangout_button"
-        android:text="Calendar"
+        android:text=""
         android:textAlignment="center"
         android:textSize="30sp"
         android:paddingStart="44dp"
@@ -31,53 +31,32 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#000000"
-        android:layout_below="@id/calendar_title" />
+        android:layout_below="@id/calendar_month" />
 
-    <CalendarView
-        android:id="@+id/calendar_view"
+    <LinearLayout
+        android:id="@+id/calendar_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/calendar_title"
-        android:focusedMonthDateColor="@color/app_gradient"/>
+        android:orientation="vertical"
+        android:layout_below="@id/calendar_month">
 
-    <TextView
-        android:id="@+id/selected_hangout_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Title"
-        android:layout_below="@id/calendar_view"
-        android:textSize="20dp"
-        android:visibility="gone"
-        android:layout_centerHorizontal="true"/>
+        <include
+            android:id="@+id/titlesContainer"
+            layout="@layout/calendar_day_titles_container" />
 
-    <TextView
-        android:id="@+id/selected_hangout_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="00:00 - 00:00"
-        android:layout_below="@id/selected_hangout_name"
-        android:visibility="gone"
-        android:textSize="20dp"
-        android:layout_centerHorizontal="true"/>
+        <com.kizitonwose.calendar.view.CalendarView
+            android:id="@+id/calendar_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cv_dayViewResource="@layout/calendar_day_layout" />
 
-    <TextView
-        android:id="@+id/selected_hangout_location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Location"
-        android:layout_below="@id/selected_hangout_time"
-        android:visibility="gone"
-        android:textSize="20dp"
-        android:layout_centerHorizontal="true"/>
+    </LinearLayout>
 
-    <TextView
-        android:id="@+id/selected_hangout_description"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/hangout_list"
         android:layout_width="wrap_content"
+        android:layout_centerHorizontal="true"
         android:layout_height="wrap_content"
-        android:text="Description"
-        android:layout_below="@id/selected_hangout_location"
-        android:visibility="gone"
-        android:textSize="20dp"
-        android:layout_centerHorizontal="true"/>
+        android:layout_below="@id/calendar_container"/>
 
 </RelativeLayout>
