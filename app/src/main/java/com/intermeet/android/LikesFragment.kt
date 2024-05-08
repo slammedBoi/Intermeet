@@ -3,40 +3,45 @@ import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.viewpager2.widget.ViewPager2
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.intermeet.android.CardStackAdapter
 import com.intermeet.android.ChatActivity
 import com.intermeet.android.DiscoverViewModel
-import com.intermeet.android.LikesPageAdapter
+import com.intermeet.android.LikeAnimation
+import com.intermeet.android.PassAnimation
 import com.intermeet.android.R
+import com.intermeet.android.UserDataModel
+import com.yuyakaido.android.cardstackview.CardStackLayoutManager
+import com.yuyakaido.android.cardstackview.CardStackListener
+import com.yuyakaido.android.cardstackview.CardStackView
+import com.yuyakaido.android.cardstackview.Direction
 
 class LikesFragment : Fragment() {
     private val viewModel: DiscoverViewModel by viewModels()
-    private lateinit var viewPager: ViewPager2
-    private lateinit var adapter: LikesPageAdapter
+    private lateinit var cardStackView: CardStackView
+    private lateinit var adapter: CardStackAdapter
     private lateinit var noUsersTextView: TextView
-    private lateinit var btnRefresh: Button
-    private lateinit var btnLike: Button
-    private lateinit var btnPass: Button
+    private lateinit var btnRefresh: TextView
     private lateinit var returnButton: View
     private lateinit var progressBar: ProgressBar
+    private lateinit var manager: CardStackLayoutManager
     private var passedUserId: String? = null
     private val currentUser = FirebaseAuth.getInstance().currentUser?.uid
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -53,30 +58,48 @@ class LikesFragment : Fragment() {
 
         setupViews(view)
         setupListeners()
+        setupCardStackView()
+        addLikeAnimationFragment()
+        addPassAnimationFragment()
 
-        viewModel.filteredUserIdsLiveData.observe(viewLifecycleOwner) { userIds ->
-            progressBar.visibility = View.GONE
-            if (userIds.isNotEmpty()) {
-                displayUserList(userIds)
-            } else {
+        /*val userRef = FirebaseDatabase.getInstance().getReference("users").child(passedUserId!!).child("likes")
+        userRef.child(passedUserId!!).get().addOnSuccessListener { snapshot ->
+                if(snapshot.exists())
+                {
+                    val designatedUser = snapshot.getValue(UserDataModel::class.java)
+
+                    var likedUser : MutableList<UserDataModel> = mutableListOf()
+                    if (designatedUser != null) {
+                        likedUser.add(designatedUser)
+                    }
+
+                    updateAdapter(likedUser)
+
+                    fetchUsers(autoRefresh = false)
+                }
+            }*/
+
+        viewModel.userData.observe(viewLifecycleOwner){user ->
+            var likedUser : MutableList<UserDataModel> = mutableListOf()
+            if (user != null) {
+                likedUser.add(user)
+                updateAdapter(likedUser)
+            }
+            else{
                 displayNoUsers()
             }
         }
-
-        fetchUsers(autoRefresh = false)
     }
 
     private fun setupViews(view: View) {
-        btnRefresh = view.findViewById(R.id.btnRefresh)
-        btnLike = view.findViewById(R.id.btnLike)
-        btnPass = view.findViewById(R.id.btnPass)
-        returnButton = view.findViewById(R.id.retrieve_lastuser)
-        viewPager = view.findViewById(R.id.usersViewPager)
-        viewPager.isUserInputEnabled = false
-        adapter = LikesPageAdapter(this, passedUserId!!)
-        viewPager.adapter = adapter
+        cardStackView = view.findViewById(R.id.usersCardStackView)
         noUsersTextView = view.findViewById(R.id.tvNoUsers)
+        btnRefresh = view.findViewById(R.id.btnRefresh)
+        returnButton = view.findViewById(R.id.return_button)
         progressBar = view.findViewById(R.id.loadingProgressBar)
+
+        adapter = CardStackAdapter(requireContext(), mutableListOf())
+        cardStackView.adapter = adapter
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -87,7 +110,7 @@ class LikesFragment : Fragment() {
             }
         })*/
 
-        btnLike.setOnClickListener {
+        /*btnLike.setOnClickListener {
             val likedUserId = passedUserId//adapter.getUserId(viewPager.currentItem)
             Log.d(TAG, "Liked user: " + likedUserId)
             if (likedUserId != null) {
@@ -103,7 +126,7 @@ class LikesFragment : Fragment() {
             parentFragmentManager.popBackStack()
 
             //need to implement to remove someone from the list
-        }
+        }*/
 
         returnButton.setOnClickListener {
             parentFragmentManager.popBackStack()
@@ -196,8 +219,8 @@ class LikesFragment : Fragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun displayUserList(userIds: List<String>) {
+    //@RequiresApi(Build.VERSION_CODES.O)
+    /*private fun displayUserList(userIds: List<String>) {
         if (userIds.isEmpty()) {
             fetchUsers(autoRefresh = true)
         } else {
@@ -211,19 +234,160 @@ class LikesFragment : Fragment() {
             adapter.notifyDataSetChanged()
             viewPager.currentItem = 0
         }
-    }
+    }*/
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun displayNoUsers(autoRefresh: Boolean = false) {
-        if (autoRefresh) {
-            fetchUsers(autoRefresh = true)
-        } else {
+        Log.d("DiscoverFragment", "displayNoUsers executed with autoRefresh=$autoRefresh")
+        progressBar.visibility = View.GONE  // Ensure the progress bar is hidden
+        cardStackView.visibility = View.GONE  // Hide the card stack view
+
+        Handler().postDelayed({
+            // Delayed changes in view after 2 seconds
             noUsersTextView.visibility = View.VISIBLE
-            viewPager.visibility = View.GONE
             btnRefresh.visibility = View.VISIBLE
-            btnLike.visibility = View.GONE
-            btnPass.visibility = View.GONE
-            returnButton.visibility = View.GONE
+
+            if (autoRefresh) {
+                fetchUsers(autoRefresh = true)
+            }
+        }, 1500) // 2000 milliseconds = 2 seconds
+    }
+
+    private fun setupCardStackView() {
+        // Initialize the manager before attaching any listeners that might use it.
+        manager = CardStackLayoutManager(context, object : CardStackListener {
+            override fun onCardDragging(direction: Direction, ratio: Float) {
+                // Handle card dragging
+            }
+
+            override fun onCardSwiped(direction: Direction) {
+                val position = manager.topPosition - 1
+                // Log the swipe direction and position
+                Log.d("DiscoverFragment", "Card swiped at position: ${manager.topPosition - 1}")
+
+                // Trigger animations and user removal based on swipe direction
+                when (direction) {
+                    Direction.Right -> {
+                        val likedUserId = passedUserId//adapter.getUserId(viewPager.currentItem)
+                        Log.d(TAG, "Liked user: " + likedUserId)
+                        if (likedUserId != null) {
+                            removeLikedUser(likedUserId)
+                            //addMatch(likedUserId)
+                            triggerLikeAnimation(likedUserId)
+                        }
+                        //triggerLikeAnimation()
+                        //removeUserFromAdapter(manager.topPosition - 1)
+                    }
+                    Direction.Left -> {
+                        val likedUserId = passedUserId//adapter.getUserId(viewPager.currentItem)
+                        Log.d(TAG, "Did not like user: " + likedUserId)
+                        if (likedUserId != null) {
+                            removeLikedUser(likedUserId)
+                            //addMatch(likedUserId)
+                            triggerPassAnimation()
+                        }
+                    }
+                    else -> {}
+                }
+            }
+
+            override fun onCardRewound() {
+                // Handle card rewind
+            }
+
+            override fun onCardCanceled() {
+                // Handle card cancel
+            }
+
+            override fun onCardAppeared(view: View, position: Int) {
+                // Handle card appearance
+                Handler(Looper.getMainLooper()).postDelayed({
+                    view.animate().alpha(1.0f).setDuration(100).start()
+                }, 500)
+            }
+
+            override fun onCardDisappeared(view: View, position: Int) {
+                // Handle card disappearance
+            }
+        }).apply {
+            // Set swipe directions and scrolling behavior
+            setDirections(Direction.HORIZONTAL)
+            setCanScrollVertical(false)
+            setCanScrollHorizontal(true)
+        }
+
+        // Set the layout manager and adapter to the CardStackView
+        cardStackView.layoutManager = manager
+        cardStackView.adapter = adapter
+    }
+
+    private fun triggerLikeAnimation(likedUserId: String) {
+        Log.d("DiscoverFragment", "triggerLikeAnimation executed")
+        val likeAnimationFragment =
+            childFragmentManager.findFragmentByTag("LikeAnimationFragment") as? LikeAnimation
+        likeAnimationFragment?.let {
+            it.animateLike()
+            it.toggleBackgroundAnimation()
+        }
+
+        // Get the current top card's position and pass it to the remove method
+        //val positionToRemove = manager.topPosition - 1
+        //removeUserFromAdapter(positionToRemove)
+        addMatch(likedUserId)
+    }
+
+    private fun addLikeAnimationFragment() {
+        val transaction = childFragmentManager.beginTransaction()
+        val likeFragment = LikeAnimation()
+        transaction.add(R.id.like_animation_container, likeFragment, "LikeAnimationFragment")
+        transaction.commit()
+        Log.d("DiscoverFragment", "Like animation fragment added")
+    }
+
+    private fun triggerPassAnimation() {
+        Log.d("DiscoverFragment", "triggerPassAnimation executed")
+        val passAnimationFragment =
+            childFragmentManager.findFragmentByTag("PassAnimationFragment") as? PassAnimation
+        passAnimationFragment?.let {
+            it.animatePass()
+            it.toggleBackgroundAnimation()
+        }
+
+        // Get the current top card's position and pass it to the remove method
+        //val positionToRemove = manager.topPosition - 1
+        //removeUserFromAdapter(positionToRemove)
+        parentFragmentManager.popBackStack()
+    }
+
+    /*private fun removeUserFromAdapter(position: Int) {
+        if (position >= 0 && position < adapter.itemCount) {
+            adapter.removeUserAtPosition(position)
+        }
+
+        // Now check if the adapter is empty
+        if (adapter.itemCount == 0) {
+            Log.d("DiscoverFragment", "Adapter is empty after swipe")
+            displayNoUsers()
+        }
+    }*/
+
+    private fun addPassAnimationFragment() {
+        val transaction = childFragmentManager.beginTransaction()
+        val passFragment = PassAnimation()
+        transaction.add(R.id.like_animation_container, passFragment, "PassAnimationFragment")
+        transaction.commit()
+        Log.d("DiscoverFragment", "Pass animation fragment added")
+    }
+
+    private fun updateAdapter(users: List<UserDataModel>) {
+        Log.d("DiscoverFragment", "updateAdapter executed with user count: ${users.size}")
+        adapter.setUsers(users)
+        if (users.isEmpty()) {
+            displayNoUsers()
+        } else {
+            cardStackView.visibility = View.VISIBLE
+            noUsersTextView.visibility = View.GONE
+            progressBar.visibility = View.GONE
         }
     }
 

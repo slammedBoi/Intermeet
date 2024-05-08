@@ -1,3 +1,5 @@
+
+
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -6,13 +8,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-
 import com.intermeet.android.CardStackAdapter
 import com.intermeet.android.DiscoverViewModel
 import com.intermeet.android.LikeAnimation
@@ -131,8 +131,6 @@ class DiscoverFragment : Fragment() {
         }
     }
 
-
-
     private fun displayNoUsers(autoRefresh: Boolean = false) {
         Log.d("DiscoverFragment", "displayNoUsers executed with autoRefresh=$autoRefresh")
         progressBar.visibility = View.GONE  // Ensure the progress bar is hidden
@@ -231,8 +229,6 @@ class DiscoverFragment : Fragment() {
         }
 
         // Get the current top card's position and pass it to the remove method
-        val positionToRemove = manager.topPosition - 1
-        removeUserFromAdapter(positionToRemove)
     }
 
     private fun addLikeAnimationFragment() {

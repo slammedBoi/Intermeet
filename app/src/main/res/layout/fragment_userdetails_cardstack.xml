@@ -114,9 +114,9 @@
                             android:id="@+id/tvGender"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:padding="12dp"
                             android:text="Male"
-                            android:textSize="15sp"
-                            android:padding="12dp"/>
+                            android:textSize="15sp" />
 
                         <TextView
                             android:id="@+id/tvSexuality"

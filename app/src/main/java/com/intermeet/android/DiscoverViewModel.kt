@@ -228,6 +228,7 @@ class DiscoverViewModel : ViewModel() {
             }
         }
     }
+
     private fun userMeetsPreferences(user: UserDataModel, currentUser: UserDataModel): Boolean {
 
         val preferenceFields = listOf(

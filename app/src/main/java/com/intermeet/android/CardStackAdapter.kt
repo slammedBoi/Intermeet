@@ -183,7 +183,5 @@ class CardStackAdapter(private val context: Context, private var users: MutableL
     fun setUsers(newUsers: List<UserDataModel>) {
         this.users = newUsers.toMutableList()
         notifyDataSetChanged()
-
-
     }
 }
