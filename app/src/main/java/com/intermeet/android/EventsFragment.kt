@@ -76,6 +76,7 @@ import com.google.firebase.database.database
 import com.intermeet.android.LockableBottomSheetBehavior
 import com.intermeet.android.UserAdapter
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import kotlin.math.*
 
@@ -104,6 +105,7 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
     private var eventsList: MutableList<Event> = mutableListOf()
     private var userMarker: Marker? = null
     private var permissionCallback: PermissionCallback? = null
+    private val geocodeCache = mutableMapOf<String, LatLng>()
 
     private val eventMarkersMap: MutableMap<String, Marker?> = mutableMapOf()
 
@@ -121,7 +123,7 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
 
         // Set up bottomSheet for events
         val bottomSheet = view.findViewById<View>(R.id.eventSheet)
-        rectangleBackground = view.findViewById<View>(R.id.rectangleBackground)
+        rectangleBackground = view.findViewById(R.id.buttonHolder)
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet).apply {
             peekHeight = 320
             state = BottomSheetBehavior.STATE_COLLAPSED
@@ -321,12 +323,21 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
         eventList.adapter = EventSheetAdapter(requireContext(), eventsList.sortedBy { it.title })
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun sortEventsByDistance(userLocation: LatLng, eventsList: MutableList<Event>) {
-        // Sort events by distance
-        eventList.adapter = EventSheetAdapter(
-            requireContext(),
-            eventsList.sortedBy {/* */ it.title}
-        )
+        progressBar.visibility = View.VISIBLE
+        GlobalScope.launch(Dispatchers.IO) {  // It's better to use a structured concurrency approach in production
+            val sortedEvents = eventsList.sortedBy { event ->
+                val address = event.addressList.joinToString(", ")
+                val eventLocation = performGeocoding(address)
+                calculateDistance(userLocation, eventLocation)
+            }
+            withContext(Dispatchers.Main) {
+                eventList.adapter = EventSheetAdapter(requireContext(), sortedEvents)
+                (eventList.adapter as EventSheetAdapter).notifyDataSetChanged()
+                progressBar.visibility = View.GONE
+            }
+        }
     }
 
     private fun sortEventsByDate(eventsList: MutableList<Event>) {
@@ -431,7 +442,7 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
         eventCardTitle.text = event.title
 
         val eventCardDate = dialog.findViewById<TextView>(R.id.event_date)
-        eventCardDate.text = event.whenInfo.dropLast(4)
+        eventCardDate.text = event.whenInfo
 
         val eventCardAddress = dialog.findViewById<TextView>(R.id.event_address)
         eventCardAddress.text = "${event.addressList[0]}, ${event.addressList[1]}"
@@ -612,6 +623,23 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
         }
 
         val goingButton = dialog.findViewById<Button>(R.id.going_button)
+
+        val currentUserId = getCurrentUserId()
+        eventRef.addValueEventListener(object: ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val peopleGoing = snapshot.children.mapNotNull { it.getValue(String::class.java)}
+                if(currentUserId in peopleGoing) {
+                    goingButton.text = "Already Going"
+                    goingButton.isEnabled = false
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+            }
+        })
+
+
         goingButton.setOnClickListener {
             // Add the user's ID to the list of people going
             val currentUserId = getCurrentUserId()
@@ -741,6 +769,10 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
 
     // Method to perform geocoding
     private fun performGeocoding(address: String): LatLng {
+        geocodeCache[address]?.let {
+            return it // Return the cached coordinates
+        }
+
         var coords = LatLng(0.0,0.0)
         try {
             val addresses = geocoder.getFromLocationName(address, 1)
@@ -750,6 +782,7 @@ class EventsFragment : Fragment(), OnMapReadyCallback, LocationListener {
                     val latitude = location.latitude
                     val longitude = location.longitude
                     coords = LatLng(latitude, longitude)
+                    geocodeCache[address] = coords
                     Log.d("Geocoding", "Latitude: $latitude, Longitude: $longitude")
                 } else {
                     Log.e("Geocoding", "Address not found")

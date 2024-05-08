@@ -113,9 +113,9 @@
         android:id="@+id/sign_up_button"
         android:layout_width="300dp"
         android:layout_height="50dp"
-        android:background="@drawable/discover_button"
-        android:fontFamily="@font/outfitregular"
+        android:background="@drawable/sign_up_button_ripple"
         android:gravity="center"
+        android:fontFamily="@font/outfitregular"
         android:text="@string/sign_up"
         android:textColor="@android:color/white"
         android:textSize="15dp"
@@ -125,6 +125,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/where_we_in"
         app:layout_constraintVertical_bias="0.084" />
+
 
     <TextView
         android:id="@+id/sign_in_button"
@@ -144,6 +145,7 @@
         app:layout_constraintVertical_bias="0.108" />
 
     <TextView
+        android:id="@+id/TOSyPP"
         android:layout_width="245dp"
         android:layout_height="61dp"
         android:layout_marginStart="74dp"

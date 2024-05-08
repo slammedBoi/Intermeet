@@ -30,13 +30,17 @@
 
     <TextView
         android:id="@+id/frame_2"
-        android:layout_width="177dp"
+        android:layout_width="wrap_content"
         android:layout_height="38dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="108dp"
+        android:layout_marginTop="16dp"
         android:background="@drawable/discover_bar"
         android:gravity="center_horizontal"
-        android:layout_centerHorizontal="true"
-        android:text="@string/likes"
+        android:fontFamily="@font/outfitlight"
         android:textColor="@color/white"
+        android:text="@string/likes"
         android:layout_margin="45dp"
         android:textSize="30sp" />
 
@@ -58,7 +62,9 @@
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="72dp"
-        android:text="Like" />
+        android:text="Like"
+        android:fontFamily="@font/outfitregular"/>
+        />
 
     <Button
         android:id="@+id/btnRefresh"
@@ -77,7 +83,8 @@
         android:layout_alignParentBottom="true"
         android:layout_marginStart="16dp"
         android:layout_marginBottom="72dp"
-        android:text="Pass" />
+        android:text="Pass"
+        android:fontFamily="@font/outfitregular"/>
 
     <ProgressBar
         android:id="@+id/loadingProgressBar"

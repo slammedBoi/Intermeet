@@ -3,6 +3,8 @@ package com.intermeet.android
 
 import InterestsAdapter
 import android.content.Context
+import android.location.Geocoder
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,13 +12,17 @@ import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.setMargins
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.android.gms.maps.model.LatLng
 import com.intermeet.android.helperFunc.calculateAgeWithCalendar
+import java.io.IOException
 
-class CardStackAdapter(private val context: Context, private var users: MutableList<UserDataModel>) :
+class
+CardStackAdapter(private val context: Context, private var users: MutableList<UserDataModel>) :
     RecyclerView.Adapter<CardStackAdapter.ViewHolder>() {
     class ViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
         fun bind(user: UserDataModel) {
@@ -24,11 +30,37 @@ class CardStackAdapter(private val context: Context, private var users: MutableL
             // Bind user data to the views
             val textViewName: TextView = view.findViewById(R.id.textViewName)
             textViewName.text = "${user.firstName}, ${calculateAgeWithCalendar(user.birthday)}"
-
+            val textViewHeight: TextView = view.findViewById(R.id.tvHeight)
+            textViewHeight.text = user.height
             val tvEducation: TextView = view.findViewById(R.id.tvEducation)
             tvEducation.text = user.school
+
+            // Translate coordinates into city and state
+            val geocoder = Geocoder(view.context)
             val tvLocation: TextView = view.findViewById(R.id.tvLocation)
-            tvLocation.text = "${user.latitude}, ${user.longitude}"
+            try {
+                val addresses = user.latitude?.let {
+                    user.longitude?.let { longitude ->
+                        geocoder.getFromLocation(it, longitude, 1)
+                    }
+                }
+                if (!addresses.isNullOrEmpty()) {
+                    val address = addresses[0]
+                    val city = address.locality
+                    val state = address.adminArea
+                    val stateAbbreviation = getStateAbbreviation(state)
+                    tvLocation.text = if (city != null && stateAbbreviation != null) {
+                        "$city, $stateAbbreviation"
+                    } else {
+                        "Unknown location"
+                    }
+                } else {
+                    tvLocation.text = "Location not found"
+                }
+            } catch (e: IOException) {
+                tvLocation.text = "Error getting location"
+                Log.e("GeocoderError", "Failed to get location", e)
+            }
 
             // Pronouns
             val tvPronouns: TextView = view.findViewById(R.id.tvPronouns)
@@ -174,12 +206,76 @@ class CardStackAdapter(private val context: Context, private var users: MutableL
 
         }
     }
+    fun getUserIdAtPosition(position: Int): String {
+        return users.getOrNull(position)?.userId ?: throw IllegalStateException("User at position $position not found")
+    }
 
     override fun getItemCount(): Int = users.size
     fun setUsers(newUsers: List<UserDataModel>) {
         this.users = newUsers.toMutableList()
         notifyDataSetChanged()
-
-
     }
+}
+
+private fun getStateAbbreviation(stateName: String?): String? {
+    val stateAbbreviations = mapOf(
+        "Alabama" to "AL",
+        "Alaska" to "AK",
+        "Arizona" to "AZ",
+        "Arkansas" to "AR",
+        "California" to "CA",
+        "Colorado" to "CO",
+        "Connecticut" to "CT",
+        "Delaware" to "DE",
+        "Florida" to "FL",
+        "Georgia" to "GA",
+        "Hawaii" to "HI",
+        "Idaho" to "ID",
+        "Illinois" to "IL",
+        "Indiana" to "IN",
+        "Iowa" to "IA",
+        "Kansas" to "KS",
+        "Kentucky" to "KY",
+        "Louisiana" to "LA",
+        "Maine" to "ME",
+        "Maryland" to "MD",
+        "Massachusetts" to "MA",
+        "Michigan" to "MI",
+        "Minnesota" to "MN",
+        "Mississippi" to "MS",
+        "Missouri" to "MO",
+        "Montana" to "MT",
+        "Nebraska" to "NE",
+        "Nevada" to "NV",
+        "New Hampshire" to "NH",
+        "New Jersey" to "NJ",
+        "New Mexico" to "NM",
+        "New York" to "NY",
+        "North Carolina" to "NC",
+        "North Dakota" to "ND",
+        "Ohio" to "OH",
+        "Oklahoma" to "OK",
+        "Oregon" to "OR",
+        "Pennsylvania" to "PA",
+        "Rhode Island" to "RI",
+        "South Carolina" to "SC",
+        "South Dakota" to "SD",
+        "Tennessee" to "TN",
+        "Texas" to "TX",
+        "Utah" to "UT",
+        "Vermont" to "VT",
+        "Virginia" to "VA",
+        "Washington" to "WA",
+        "West Virginia" to "WV",
+        "Wisconsin" to "WI",
+        "Wyoming" to "WY",
+        "District of Columbia" to "DC",
+        "American Samoa" to "AS",
+        "Guam" to "GU",
+        "Northern Mariana Islands" to "MP",
+        "Puerto Rico" to "PR",
+        "United States Minor Outlying Islands" to "UM",
+        "Virgin Islands" to "VI"
+    )
+    return stateAbbreviations[stateName]
 }

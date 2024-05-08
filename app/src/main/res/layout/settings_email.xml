@@ -85,13 +85,14 @@
 
     <Button
         android:id="@+id/verify_email"
-        android:layout_width="98dp"
-        android:layout_height="37dp"
+        android:layout_width="108dp"
+        android:layout_height="41dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
+        android:layout_marginLeft="113dp"
         android:background="@drawable/transparent_button"
-        android:gravity="top"
         android:fontFamily="@font/outfitregular"
+        android:gravity="top"
         android:text="@string/verify_email"
         android:textAppearance="@style/just_incase"
         android:textColor="@android:color/black"
@@ -103,49 +104,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.25" />
 
-    <View
-        android:layout_width="410dp"
-        android:layout_height="1dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="72dp"
-        android:background="#000000"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/verify_email" />
 
-
-    <TextView
-        android:id="@+id/settings_promotions"
-        android:layout_width="88dp"
-        android:layout_height="21dp"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:gravity="top"
-        android:textColor="@color/black"
-        android:fontFamily="@font/outfitregular"
-        android:text="@string/promotion_slider"
-        android:textAppearance="@style/email_up"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.089"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.454" />
-
-    <Switch
-        android:id="@+id/switch_toggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="204dp"
-        android:checked="false"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.34"
-        app:layout_constraintStart_toEndOf="@+id/settings_promotions"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.457"
-        tools:ignore="MissingConstraints,UseSwitchCompatOrMaterialXml" /> <!-- Set to true if you want it to be initially checked -->
+    <!-- Set to true if you want it to be initially checked -->
 </androidx.constraintlayout.widget.ConstraintLayout>

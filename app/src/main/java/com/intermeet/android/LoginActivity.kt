@@ -1,26 +1,28 @@
 package com.intermeet.android
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
+import android.annotation.SuppressLint
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.MotionEvent
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-
-
-        // Initializing firebase auth
         auth = FirebaseAuth.getInstance()
 
         val emailEditText: EditText = findViewById(R.id.signInEmail)
@@ -37,14 +39,33 @@ class LoginActivity : AppCompatActivity() {
         }
 
         signUpButton.setOnClickListener {
-            // Intent to navigate to the SecondActivity
             val intent = Intent(this, SignupActivity::class.java)
             startActivity(intent)
         }
+
         forgotPasswordButton.setOnClickListener {
-            // Intent to navigate to the SecondActivity
             val intent = Intent(this, ResetPasswordActivity::class.java)
             startActivity(intent)
+        }
+
+        // Add animations to buttons
+        setupButtonAnimations(loginButton)
+        setupButtonAnimations(signUpButton)
+        setupButtonAnimations(forgotPasswordButton)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupButtonAnimations(button: View) {
+        button.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    v.animate().scaleX(0.9f).scaleY(0.9f).setDuration(200).start()
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
+                }
+            }
+            false // Return false to allow the click event to proceed
         }
     }
 
@@ -52,15 +73,10 @@ class LoginActivity : AppCompatActivity() {
         if (email.isNotEmpty() && password.isNotEmpty()) {
             auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    // Sign in success
                     val user = auth.currentUser
                     updateUI(user)
                 } else {
-                    // If sign in fails, display a message to the user
-                    Toast.makeText(
-                        baseContext, "Authentication failed.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(baseContext, "Authentication failed.", Toast.LENGTH_SHORT).show()
                     updateUI(null)
                 }
             }
@@ -71,22 +87,11 @@ class LoginActivity : AppCompatActivity() {
 
     private fun updateUI(user: FirebaseUser?) {
         if (user != null) {
-            // User is signed in
-            val intent = Intent(this, MainActivity::class.java) // sends to MainActivity.js
+            val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()
         } else {
-            // User is signed out
             Toast.makeText(baseContext, "Please sign in to continue.", Toast.LENGTH_SHORT).show()
         }
     }
-
-//    private
-//    fun buttonFunc() {
-//        signUpButton.setOnClickListener {
-//            // Intent to navigate to the SecondActivity
-//            val intent = Intent(this, SignupActivity::class.java)
-//            startActivity(intent)
-//        }
-//    }
 }

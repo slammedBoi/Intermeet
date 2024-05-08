@@ -74,8 +74,14 @@ class ChatFragment : Fragment() {
         val userRef = FirebaseDatabase.getInstance().getReference("users").child(userID).child("matches")
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val likedUserIds = snapshot.children.mapNotNull { it.value.toString() }
-                callback(likedUserIds)
+                //val likedUserIds = snapshot.children.mapNotNull { it.value.toString() }
+                //callback(likedUserIds)
+                if (isAdded) {  // Check if the fragment is currently added to its activity
+                    val likedUserIds = snapshot.children.mapNotNull { it.value.toString() }
+                    callback(likedUserIds)
+                } else {
+                    Log.d(TAG, "Fragment not attached when data received.")
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -83,6 +89,7 @@ class ChatFragment : Fragment() {
             }
         })
     }
+
 
 
     private fun startChatWithUser(userId: String) {

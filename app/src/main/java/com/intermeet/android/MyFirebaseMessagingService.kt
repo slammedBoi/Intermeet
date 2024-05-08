@@ -61,10 +61,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private fun showNotification(title: String, message: String, channelId: String, userId: String?) {
         Log.d(TAG, "Preparing to show notification. Channel: $channelId, UserId: $userId")
 
-        //if (channelId == "ChatChannel" && AppState.isChatActivityVisible && AppState.currentChatUserId == userId) {
-        //    Log.d(TAG, "ChatActivity is active with the user. No notification needed.")
-        //    return
-        //}
         if (channelId == "ChatChannel" && (AppState.isChatFragmentActive || AppState.isChatActivityVisible)) {
             Log.d(TAG, "Chat UI is active. Not showing chat notification.")
             return
@@ -74,9 +70,21 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notificationID = System.currentTimeMillis().toInt()
 
-        val intent = Intent(this, ChatActivity::class.java).apply {
-            putExtra("userId", userId)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+
+        //val intent = Intent(this, ChatActivity::class.java).apply {
+        //    putExtra("userId", userId)  // Pass the userId to ChatActivity
+        //    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        //}
+        val intent = if (channelId == "LikeChannel") {
+            Intent(this, MainActivity::class.java).apply {
+                putExtra("openFragment", "like")  // Direct MainActivity to open LikePageFragment
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+        } else {  // Default to ChatActivity for other cases (e.g., ChatChannel)
+            Intent(this, ChatActivity::class.java).apply {
+                putExtra("userId", userId)  // Pass the userId to ChatActivity
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
         }
 
         val pendingIntent: PendingIntent = PendingIntent.getActivity(

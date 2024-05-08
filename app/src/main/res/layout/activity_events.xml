@@ -61,41 +61,42 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_gravity="top|end"
-        android:layout_marginEnd="35dp"
+        android:layout_marginEnd="6dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/baseline_menu_24"
         android:contentDescription="@string/events" />
 
-    <View
-        android:id="@+id/rectangleBackground"
-        android:layout_width="66dp"
-        android:layout_height="102dp"
+    <RelativeLayout
+        android:id="@+id/buttonHolder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="top|end"
         android:layout_marginTop="75dp"
-        android:layout_marginEnd="25dp"
-        android:background="@drawable/rounded_corners"
-        app:layout_anchor="@+id/myLocation_button"
-        app:layout_anchorGravity="top|center" />
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/rounded_gradient_button">
 
-    <Button
-        android:id="@+id/events_mapIcon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="75dp"
-        android:layout_marginEnd="35dp"
-        android:background="@drawable/map_icon"
-        android:contentDescription="@string/events" />
+        <Button
+            android:id="@+id/events_mapIcon"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            android:background="@drawable/map_icon"
+            android:contentDescription="@string/events"
+            app:layout_anchorGravity="top|center" />
 
-    <Button
-        android:id="@+id/myLocation_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="125dp"
-        android:layout_marginEnd="35dp"
-        android:background="@drawable/my_location"
-        android:contentDescription="@string/events" />
+        <Button
+            android:id="@+id/myLocation_button"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_below="@id/events_mapIcon"
+            android:layout_alignParentStart="true"
+            android:layout_margin="2dp"
+            android:layout_marginStart="1dp"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="2dp"
+            android:background="@drawable/my_location"
+            android:contentDescription="@string/events" />
+    </RelativeLayout>
 
     <FrameLayout
         android:id="@+id/eventSheet"

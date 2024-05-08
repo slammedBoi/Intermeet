@@ -20,6 +20,8 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import com.google.firebase.database.getValue
+import com.intermeet.android.helperFunc.getUserDataRepository
+
 //import com.intermeet.android.helperFunc.getUserDataRepository
 
 // Define the PreferenceActivity class that extends AppCompatActivity and implements listener interfaces.
@@ -70,7 +72,7 @@ class EditPreference : AppCompatActivity(), DistanceFragment.OnDistanceSelectedL
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_preferences) // Sets the UI layout for this Activity.
         val toolbar: Toolbar = findViewById(R.id.toolbar)
-        //userDataRepository = getUserDataRepository()
+        userDataRepository = getUserDataRepository()
         // Linking variables with their respective view components in the layout.
 
         tvInterest = findViewById(R.id.tvInterested)

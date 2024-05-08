@@ -115,46 +115,55 @@ class LikesFragment : Fragment() {
         val likedUserDB = FirebaseDatabase.getInstance().getReference("users/$likedUserId/matches")
         val currentUserDB = FirebaseDatabase.getInstance().getReference("users/$currentUser/matches")
 
-
-        likedUserDB.addListenerForSingleValueEvent(object : ValueEventListener{
+        currentUserDB.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                if(snapshot.exists())
-                {
-                    var listSize = snapshot.childrenCount.toInt()
-                    listSize+=1
-                    var userField = "user" + listSize.toString()
-                    likedUserDB.updateChildren(mapOf(userField to currentUser))
+                var isAlreadyMatched = false
+                for (match in snapshot.children) {
+                    val matchedUserId = match.getValue(String::class.java)
+                    if (matchedUserId == likedUserId) {
+                        isAlreadyMatched = true
+                        break
+                    }
                 }
-                else
-                {
-                    val userField = "user1"
-                    likedUserDB.updateChildren(mapOf(userField to currentUser))
+
+                if (!isAlreadyMatched) {
+                    // Add current user to liked user's matches
+                    likedUserDB.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(likedSnapshot: DataSnapshot) {
+                            val listSize = likedSnapshot.childrenCount + 1
+                            val userField = "user$listSize"
+                            likedUserDB.child(userField).setValue(currentUser)
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            Log.e(TAG, "Error adding match to liked user's database", error.toException())
+                        }
+                    })
+
+                    // Add liked user to current user's matches
+                    currentUserDB.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(currentSnapshot: DataSnapshot) {
+                            val listSize = currentSnapshot.childrenCount + 1
+                            val userField = "user$listSize"
+                            currentUserDB.child(userField).setValue(likedUserId)
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            Log.e(TAG, "Error adding match to current user's database", error.toException())
+                        }
+                    })
+
+                    // Navigate to chat activity
+                    val intent = Intent(requireContext(), ChatActivity::class.java)
+                    intent.putExtra("userId", likedUserId)
+                    startActivity(intent)
+                } else {
+                    Log.d(TAG, "User $likedUserId is already in matches list")
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                TODO("Not yet implemented")
-            }
-        })
-
-        currentUserDB.addListenerForSingleValueEvent(object : ValueEventListener{
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if(snapshot.exists())
-                {
-                    var listSize = snapshot.childrenCount.toInt()
-                    listSize+=1
-                    var userField = "user" + listSize.toString()
-                    currentUserDB.updateChildren(mapOf(userField to likedUserId))
-                }
-                else
-                {
-                    val userField = "user1"
-                    currentUserDB.updateChildren(mapOf(userField to likedUserId))
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                TODO("Not yet implemented")
+                Log.e(TAG, "Error checking matches in current user's database", error.toException())
             }
         })
 

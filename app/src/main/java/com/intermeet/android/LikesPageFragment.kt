@@ -42,10 +42,13 @@ class LikesPageFragment(private var recyclerDataArrayList: List<String>) : Fragm
 
                 // setting grid layout manager to implement grid view.
                 // in this method '2' represent/s number of columns to be displayed in grid view.
-                val layoutManager = GridLayoutManager(requireContext().applicationContext, 2)
+                if (isAdded) { // Check if fragment is attached to an activity.
+                    val layoutManager = GridLayoutManager(requireContext(), 2)
+                    recyclerView.layoutManager = layoutManager
+                }
 
                 // at last set adapter to recycler view.
-                recyclerView.layoutManager = layoutManager
+                //recyclerView.layoutManager = layoutManager
                 recyclerView.adapter = adapter
                 userDetailAdapter = UserDetailAdapter(this)
 
@@ -70,7 +73,11 @@ class LikesPageFragment(private var recyclerDataArrayList: List<String>) : Fragm
         val userRef = FirebaseDatabase.getInstance().getReference("users").child(userID).child("likes")
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+
+                //val likedUserIds = snapshot.children.mapNotNull { it.key }.toMutableList()
+                if (!isAdded) return // Check if fragment is still attached
                 val likedUserIds = snapshot.children.mapNotNull { it.key }.toMutableList()
+
                 callback(likedUserIds)
             }
 

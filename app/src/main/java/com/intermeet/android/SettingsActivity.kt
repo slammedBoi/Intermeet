@@ -2,7 +2,10 @@ package com.intermeet.android
 
 import android.app.ActivityOptions
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -13,15 +16,36 @@ class SettingsActivity : AppCompatActivity() {
     companion object {
         const val RESULT_GO_TO_PROFILE = 1 // A unique code to identify the specific result.
     }
+    private fun openNotificationSettingsForApp() {
+        val intent = Intent().apply {
+            when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
+                    action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                    putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                }
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
+                    action = "android.settings.APP_NOTIFICATION_SETTINGS"
+                    putExtra("app_package", packageName)
+                    putExtra("app_uid", applicationInfo.uid)
+                }
+                else -> {
+                    action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                    data = Uri.parse("package:$packageName")
+                }
+            }
+        }
+        startActivity(intent)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         val emailButton: Button = findViewById(R.id.Email)
-        val paymentsButton: Button = findViewById(R.id.Payments)
-        val phoneNumberButton: Button = findViewById(R.id.PhoneNumber)
         val logout: Button = findViewById(R.id.LogOut)
+        val privacyPolicyButton: Button = findViewById(R.id.privacyPolicyButton)
+        val notificationSettingsButton: Button = findViewById(R.id.PushNotifications)
+        val termsOfServiceButton: Button = findViewById(R.id.TOS)
 
         // Set click listener for the toolbar navigation icon (back button)
         toolbar.setNavigationOnClickListener {
@@ -39,20 +63,21 @@ class SettingsActivity : AppCompatActivity() {
             val intent = Intent(this, ProfileEmailActivity::class.java)
             startActivity(intent)
         }
+        notificationSettingsButton.setOnClickListener {
+            openNotificationSettingsForApp()
+        }
+        privacyPolicyButton.setOnClickListener {
+            val intent = Intent(this, WebViewActivity::class.java)
+            intent.putExtra("url", "https://intermeetiate.github.io/InterMeetiatePrivatePolicy") // Your privacy policy URL
+            startActivity(intent)
+        }
 
+        termsOfServiceButton.setOnClickListener {
+            val intent = Intent(this, WebViewActivity::class.java)
+            intent.putExtra("url", "https://intermeetiate.github.io/TermsOfService/") // Your terms of service URL
+            startActivity(intent)
+        }
         // Set click listener for the payments button
-        paymentsButton.setOnClickListener {
-            // Navigate to the PaymentsActivity
-            val intent = Intent(this, PaymentsActivity::class.java)
-            startActivity(intent)
-        }
-
-        // Set click listener for the phone number button
-        phoneNumberButton.setOnClickListener {
-            // Navigate to the PhoneNumberActivity
-            val intent = Intent(this, PhoneNumberActivity::class.java)
-            startActivity(intent)
-        }
 
         logout.setOnClickListener {
             // Show a loading indicator or a simple toast message

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
@@ -10,58 +11,103 @@
         android:layout_width="match_parent"
         android:layout_height="687dp"
         android:layout_below="@+id/frame_2"
-        android:layout_marginTop="-38dp" />
+        app:layout_constraintTop_toBottomOf="@+id/topBar" />
 
     <View
-        android:id="@+id/return_button"
-        android:layout_width="40dp"
-        android:layout_height="38dp"
-        android:background="@drawable/resource_return"
-        android:layout_marginEnd="48dp"
-        android:layout_marginTop="45dp"
-        android:layout_marginStart="23dp"/>
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@android:color/white"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="-36dp" />
 
     <TextView
         android:id="@+id/frame_2"
         android:layout_width="177dp"
         android:layout_height="38dp"
-        android:background="@drawable/discover_bar"
-        android:gravity="center_horizontal"
         android:layout_centerHorizontal="true"
+        android:layout_gravity="center_horizontal|top"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/discover_bar"
+        android:clipToOutline="true"
+        android:fontFamily="@font/outfitlight"
+        android:gravity="center_horizontal|top"
+
         android:text="@string/discover_homepage"
         android:textColor="@color/white"
-        android:layout_margin="45dp"
-        android:textSize="30sp" />
+        android:textSize="30sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.027" />
+
+
+    <View
+        android:id="@+id/return_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="35dp"
+        android:layout_marginTop="35dp"
+        android:background="@drawable/arrow_return"
+        app:layout_constraintEnd_toStartOf="@+id/frame_2"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/topBar"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tvNoUsers"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/no_users"
+        android:layout_width="235dp"
+        android:layout_height="132dp"
         android:layout_centerInParent="true"
-        android:visibility="gone"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="240dp"
+        android:fontFamily="@font/outfitregular"
+        android:gravity="center"
+        android:padding="16dp"
+        android:text="@string/no_users"
+        android:textColor="@color/black"
         android:textSize="18sp"
-        android:padding="16dp" />
+        android:visibility="gone"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topBar" />
 
     <TextView
         android:id="@+id/btnRefresh"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
         android:layout_below="@+id/tvNoUsers"
-        android:text="@string/review"
-        android:visibility="gone"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="123dp"
+        android:layout_marginTop="20dp"
         android:background="@drawable/discover_button"
+        android:textColor="@color/black"
+        android:fontFamily="@font/outfitregular"
+        android:textSize="18sp"
+        android:visibility="gone"
+
         android:gravity="center"
-        android:layout_centerHorizontal="true"/>
+        android:text="@string/review"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvNoUsers" />
 
     <ProgressBar
         android:id="@+id/loadingProgressBar"
+        style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"
+        android:layout_marginStart="159dp"
+        android:visibility="gone"
+        android:layout_marginTop="280dp"
         android:indeterminate="true"
-        android:visibility="gone" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/usersCardStackView"
+        tools:ignore="MissingConstraints" />
 
 
     <FrameLayout
@@ -74,6 +120,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+
     <!--    <it.fabiosassu.stackexpandableview.StackExpandableView-->
     <!--        android:id="@+id/stackExpandableView"-->
     <!--        android:layout_width="match_parent"-->
@@ -82,5 +129,5 @@
     <!--        android:background="#CCFFFFFF"-->
     <!--        app:orientation="vertical"/>-->
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
 

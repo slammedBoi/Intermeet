@@ -35,7 +35,7 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="delete_account">Delete Account</string>
     <string name="logout">Logout</string>
-    <string name="verify_email">Verify Email</string>
+    <string name="verify_email">Change Email</string>
     <string name="settings_emailTitle">Email</string>
     <string name="promotion_slider">Promotions</string>
     <string name="payments_title">Payments</string>
@@ -375,7 +375,7 @@
     <string name="chat">Chats</string>
     <string name="likes">Likes You</string>
     <string name="seelikes">See Who Likes You!</string>
-    <string name="TOSyPP">By signing up, you agree to our Terms. See how we use your data in our Private Policy</string>
+    <string name="TOSyPP">By signing up, you agree to our Terms. See how we use your data in our Privacy Policy</string>
     <string name="participant">Participant</string>
     <string name="event_image">Event Image</string>
     <string name="going">Going</string>
@@ -391,7 +391,7 @@
     <string name="like_channel_description">Channel for Likes</string>
     <string name="chat_channel_name">Chat Channel\n</string>
     <string name="chat_channel_description">Notification for chats</string>
-
+    <string name="TERMS"></string>
 
 
 </resources>

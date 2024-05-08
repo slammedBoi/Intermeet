@@ -60,6 +60,8 @@ class AccountCreationActivity : AppCompatActivity() {
                 user?.let {
                     uploadImagesToFirebaseStorage(user.uid) { isSuccess ->
                         if (isSuccess) {
+                            val userData = UserDataRepository.userData ?: UserDataModel()
+                            userData.userId = user.uid
                             storeUserDataToFirebaseDatabase(user.uid)
                             if (latitude != null && longitude != null) {
                                 storeUserLocation(user.uid, latitude, longitude)

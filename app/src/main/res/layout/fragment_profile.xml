@@ -23,16 +23,19 @@
             android:layout_height="38dp"
             android:background="@drawable/discover_bar"
             android:clipToOutline="true"
+            android:fontFamily="@font/outfitlight"
             android:gravity="center_horizontal|top"
             android:text="@string/profile_page"
-            android:fontFamily="@font/outfitlight"
             android:textColor="@color/white"
             android:textSize="30sp"
+            android:layout_centerHorizontal="true"
+            android:layout_gravity="center_horizontal|top"
+
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.023" />
+            app:layout_constraintVertical_bias="0.027" />
 
         <Button
             android:id="@+id/settingButton"

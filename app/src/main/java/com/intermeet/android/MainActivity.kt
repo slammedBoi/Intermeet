@@ -25,68 +25,127 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Places.initialize(applicationContext, "@string/google_maps_key")
-        updateFCMToken()
 
+        // Initialize Places API with your API key stored in strings.xml
+        Places.initialize(applicationContext, getString(R.string.google_maps_key))
+
+        // Update FCM token and store current user ID
+        updateFCMToken()
+        storeCurrentUserId()
+
+        // Setup BottomNavigationView
         bottomNav = findViewById(R.id.bottom_nav)
         setupNavigation()
-
-        handleIntent(intent)  // Ensure the intent is handled to check for any fragment-specific navigation.
-        // Set the default selected item in the bottom navigation
-        if (!intent.hasExtra("openFragment")) {
+        // Check for an intent with an "openFragment" extra to decide which fragment to open
+        if (intent.hasExtra("openFragment")) {
+            handleIntent(intent)
+        } else if (savedInstanceState == null) {
+            // Default to opening the DiscoverFragment if no specific fragment is requested and there is no saved state
             bottomNav.selectedItemId = R.id.navigation_discover
+            navigateTo(DiscoverFragment.newInstance())
         }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        handleIntent(intent)
+        setIntent(intent)  // Update the activity's intent to the new intent
+        handleIntent(intent)  // Handle the new intent
     }
 
     private fun setupNavigation() {
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.navigation_discover -> navigateTo(DiscoverFragment.newInstance())
-                R.id.navigation_account -> navigateTo(ProfileFragment.newInstance())
-                R.id.navigation_events -> navigateTo(EventsFragment.newInstance())
-                R.id.navigation_worth -> navigateTo(LikesPageFragment.newInstance())
-                R.id.navigation_chat -> navigateTo(ChatFragment.newInstance())
+                R.id.navigation_discover -> {
+                    navigateTo(DiscoverFragment.newInstance())
+                    true
+                }
+                R.id.navigation_account -> {
+                    navigateTo(ProfileFragment.newInstance())
+                    true
+                }
+                R.id.navigation_events -> {
+                    navigateTo(EventsFragment.newInstance())
+                    true
+                }
+                R.id.navigation_worth -> {
+                    navigateTo(LikesPageFragment.newInstance())
+                    true
+                }
+                R.id.navigation_chat -> {
+                    navigateTo(ChatFragment.newInstance())
+                    true
+                }
                 else -> false
             }
         }
     }
 
-    private fun navigateTo(fragment: Fragment): Boolean {
+
+    private fun navigateTo(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .commit()
-        return true
     }
 
+    //private fun handleIntent(intent: Intent) {
+    //    val fragmentToOpen = intent.getStringExtra("openFragment")
+    //    when (fragmentToOpen) {
+    //        "discover" -> navigateTo(DiscoverFragment.newInstance())
+    //        "chat" -> navigateTo(ChatFragment.newInstance().apply {
+    //            arguments = Bundle().apply { putString("userId", intent.getStringExtra("userId")) }
+    //        })
+    //        "like" -> navigateTo(LikesPageFragment.newInstance())
+    //        else -> navigateTo(DiscoverFragment.newInstance())  // Default fragment
+    //    }
+    //}
     private fun handleIntent(intent: Intent) {
-        if (intent.hasExtra("openFragment")) {
-            val fragment = when (intent.getStringExtra("openFragment")) {
-                "chat" -> ChatFragment.newInstance()
-                else -> DiscoverFragment.newInstance()  // Ensure the default fragment is DiscoverFragment
+        val fragmentToOpen = intent.getStringExtra("openFragment")
+        when (fragmentToOpen) {
+            "discover" -> {
+                navigateTo(DiscoverFragment.newInstance())
+                bottomNav.selectedItemId = R.id.navigation_discover
             }
-            navigateTo(fragment)
-            bottomNav.selectedItemId = when (fragment) {
-                is ChatFragment -> R.id.navigation_chat
-                else -> R.id.navigation_discover
+            "chat" -> {
+                navigateTo(ChatFragment.newInstance().apply {
+                    arguments = Bundle().apply { putString("userId", intent.getStringExtra("userId")) }
+                })
+                bottomNav.selectedItemId = R.id.navigation_chat
+            }
+            "like" -> {
+                navigateTo(LikesPageFragment.newInstance())
+                bottomNav.selectedItemId = R.id.navigation_worth
+            }
+            "events" -> {
+                navigateTo(EventsFragment.newInstance())
+                bottomNav.selectedItemId = R.id.navigation_events
+            }
+            else -> {
+                navigateTo(DiscoverFragment.newInstance())  // Default fragment
+                bottomNav.selectedItemId = R.id.navigation_discover
             }
         }
-
     }
+
 
     private fun updateFCMToken() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                task.result?.let {
+                task.result?.let { token ->
                     FirebaseAuth.getInstance().currentUser?.uid?.let { userId ->
-                        FirebaseDatabase.getInstance().getReference("users/$userId/fcmToken").setValue(it)
+                        FirebaseDatabase.getInstance().getReference("users/$userId/fcmToken").setValue(token)
                     }
                 }
+            } else {
+                Log.w(TAG, "Fetching FCM registration token failed", task.exception)
             }
+        }
+    }
+
+    private fun storeCurrentUserId() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        userId?.let {
+            val prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+            prefs.edit().putString("UserId", it).apply()
         }
     }
 }
