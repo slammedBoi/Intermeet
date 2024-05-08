@@ -1,4 +1,3 @@
-
 package com.intermeet.android
 
 import android.content.ContentValues.TAG
@@ -103,12 +102,13 @@ class DiscoverViewModel : ViewModel() {
             val currentUser = fetchCurrentUserPreferences()
             val seenUserIds = fetchSeenUserIds()
             val likedUserIds = fetchLikedUsers()
+            val matchedUserIds = fetchMapUsers()
             val userRef = FirebaseDatabase.getInstance().getReference("users")
 
             val usersDataDeferred = userIds.map { userId ->
                 async {
                     val userData = userRef.child(userId).get().await().getValue(UserDataModel::class.java)
-                    if (userData != null && !seenUserIds.contains(userId) && !likedUserIds.contains(userId)) {
+                    if (userData != null && !seenUserIds.contains(userId) && !likedUserIds.contains(userId) && !matchedUserIds.contains(userId)) {
                         userId to userData
                     } else {
                         null
@@ -123,45 +123,13 @@ class DiscoverViewModel : ViewModel() {
                 userMeetsPreferences(it.value, currentUser)
             }.toList().sortedByDescending {
                 commonInterestsCount(it.second.interests, currentUser.interests)
-
-            }.map { it.first }.toMutableList()
-
-            val filteredUsers = fetchUsersData(filteredAndSortedIds)
-            fetchLikedUsers(getCurrentUser()!!) { filteredUsers ->
-
-                val iterator = filteredAndSortedIds.iterator()
-                while (iterator.hasNext())
-                {
-                    val id = iterator.next()
-                    if (filteredUsers.contains(id))
-                    {
-                        iterator.remove() // Safely remove the element using the iterator
-                    }
-                }
-                //filteredUserIdsLiveData.postValue(filteredAndSortedIds)
-            }
-
-            fetchMapUsers(getCurrentUser()!!){filteredMatches ->
-
-                val iterator = filteredAndSortedIds.iterator()
-                while(iterator.hasNext())
-                {
-                    val id = iterator.next()
-                    if(filteredMatches.contains(id))
-                    {
-                        iterator.remove()
-                    }
-                }
-                _filteredUsers.postValue(filteredUsers)
-                filteredUserIdsLiveData.postValue(filteredAndSortedIds)
-            }
-
-            /*}.map { it.first }
+            }.map { it.first }
 
             // Fetch full user details for the filtered and sorted IDs and update LiveData
             val filteredUsers = fetchUsersData(filteredAndSortedIds)
             _filteredUsers.postValue(filteredUsers) // Post the detailed data to LiveData
-            filteredUserIdsLiveData.postValue(filteredAndSortedIds) // Post filtered IDs for any other use*/
+            filteredUserIdsLiveData.postValue(filteredAndSortedIds) // Post filtered IDs for any other use
+
         }
     }
 
@@ -183,6 +151,17 @@ class DiscoverViewModel : ViewModel() {
         }
     }
 
+    private suspend fun fetchMapUsers(): Set<String> {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return emptySet()
+        val userRef = FirebaseDatabase.getInstance().getReference("users/$userId/matches")
+        return try {
+            val snapshot = userRef.get().await()
+            snapshot.children.mapNotNull { it.value.toString() }.toSet()
+        } catch (e: Exception) {
+            Log.e("DiscoverViewModel", "Failed to fetch liked user IDs", e)
+            emptySet()  // Return an empty set in case of error
+        }
+    }
 
     private suspend fun fetchCurrentUserPreferences(): UserDataModel {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return UserDataModel()
