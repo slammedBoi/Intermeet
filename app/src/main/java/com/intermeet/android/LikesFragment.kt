@@ -95,7 +95,6 @@ class LikesFragment : Fragment() {
                 removeLikedUser(likedUserId)
             }
             //need to implement to remove from someones discover list and then add to chats
-
         }
 
         btnPass.setOnClickListener {
@@ -167,10 +166,23 @@ class LikesFragment : Fragment() {
     private fun removeLikedUser(likedUserId : String)
     {
         val currentUserDB = FirebaseDatabase.getInstance().getReference("users/$currentUser/likes")
+        val likedUserDb = FirebaseDatabase.getInstance().getReference("user/$likedUserId/likes")
+
         val updates = HashMap<String, Any?>()
         updates[likedUserId] = null
 
+        val likedUpdates = HashMap<String, Any?>()
+        likedUpdates[currentUser!!] = null
+
         currentUserDB.updateChildren(updates)
+            .addOnSuccessListener {
+                Log.d(TAG, "Successfully removed")
+            }
+            .addOnFailureListener{
+                Log.d(TAG, "Cannot remove")
+            }
+
+        likedUserDb.updateChildren(likedUpdates)
             .addOnSuccessListener {
                 Log.d(TAG, "Successfully removed")
             }

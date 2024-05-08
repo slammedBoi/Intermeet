@@ -16,7 +16,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import queryNearbyUsers
-import java.time.Instant
 import java.time.LocalDate
 import java.time.Period
 import java.time.format.DateTimeFormatter
@@ -125,6 +124,7 @@ class DiscoverViewModel : ViewModel() {
 
             }.map { it.first }.toMutableList()
 
+            val filteredUsers = fetchUsersData(filteredAndSortedIds)
             fetchLikedUsers(getCurrentUser()!!) { filteredUsers ->
 
                 val iterator = filteredAndSortedIds.iterator()
@@ -150,6 +150,7 @@ class DiscoverViewModel : ViewModel() {
                         iterator.remove()
                     }
                 }
+                _filteredUsers.postValue(filteredUsers)
                 filteredUserIdsLiveData.postValue(filteredAndSortedIds)
             }
 
